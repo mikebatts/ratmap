@@ -1,4 +1,4 @@
-// Shared types for Rats.nyc — mirror the `rat_observations` schema in
+// Shared types for deadrat.nyc — mirror the `rat_observations` schema in
 // supabase/migrations/0001_init.sql. Keep these in sync with the migration.
 
 export type Source = "311" | "rodent_inspection";

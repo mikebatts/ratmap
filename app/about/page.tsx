@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SITE_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "About — Rats.nyc",
-  description:
-    "Rats.nyc is a free, no-account, no-ads map of every publicly-reported rat sighting, inspection, and 311 complaint in NYC.",
+  title: `About — ${SITE_NAME}`,
+  description: `${SITE_NAME} is a free, no-account, no-ads map of every publicly-reported rat sighting, inspection, and 311 complaint in NYC.`,
 };
 
 const REPO_URL = "https://github.com/mikebatts/rats-nyc";
@@ -20,13 +20,14 @@ export default function AboutPage() {
       </Link>
 
       <h1 className="mt-8 font-display text-3xl font-bold text-ink">
-        About Rats.nyc
+        About {SITE_NAME}
       </h1>
 
       <div className="mt-6 space-y-5 text-lg leading-relaxed text-ink">
         <p>
-          Rats.nyc is a free, no-account, no-ads map of every publicly-reported
-          rat sighting, inspection, and 311 complaint in New York City.
+          {SITE_NAME} is a free, no-account, no-ads map of every
+          publicly-reported rat sighting, inspection, and 311 complaint in New
+          York City.
         </p>
         <p>
           Built by{" "}

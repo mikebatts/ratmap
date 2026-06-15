@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import { SITE_URL, SITE_NAME } from "@/lib/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,15 +16,17 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Rats.nyc — NYC's rat map. No fluff.",
+  title: `${SITE_NAME} — NYC's rat map. No fluff.`,
   description:
     "A free, no-account, no-ads map of every publicly-reported rat sighting, inspection, and 311 complaint in New York City. Data from NYC Open Data, updated daily.",
-  metadataBase: new URL("https://rats.nyc"),
+  metadataBase: new URL(SITE_URL),
   openGraph: {
-    title: "Rats.nyc — NYC's rat map. No fluff.",
+    title: `${SITE_NAME} — NYC's rat map. No fluff.`,
     description:
       "Every publicly-reported rat sighting, inspection, and 311 complaint in NYC, on a fast map. Free, no account, no ads.",
     type: "website",
+    url: SITE_URL,
+    siteName: SITE_NAME,
   },
 };
 

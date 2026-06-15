@@ -10,6 +10,7 @@ import FilterPanel, { type FilterState } from "./components/FilterPanel";
 import AddressDetail from "./components/AddressDetail";
 import { sinceFromRange } from "@/lib/map";
 import { CATEGORY_META } from "@/lib/types";
+import { SITE_NAME } from "@/lib/site";
 
 const LEGEND = [
   { key: "sighting", label: "Sighting" },
@@ -68,7 +69,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <div className="flex items-baseline gap-2 rounded-lg bg-ink px-3 py-2 shadow-md">
               <span className="font-display text-lg font-bold text-hotdog">
-                Rats.nyc
+                {SITE_NAME}
               </span>
               <span className="hidden text-xs text-white/70 sm:inline">
                 {total !== null && total > 0
