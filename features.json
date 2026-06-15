@@ -1,0 +1,139 @@
+{
+  "project": "rats-nyc",
+  "brief": "memory/projects/rats-nyc-brief-2026-06-15.md",
+  "note": "Per the AGENT-LOOPS pattern: each session works one feature, edits only the `passes` field, and leaves clean state. `passes: false` until verified end-to-end against real data/UI.",
+  "features": [
+    {
+      "id": "scaffold",
+      "priority": "P0",
+      "description": "Next.js 15 + React 19 + TS + Tailwind + MapLibre scaffold builds cleanly",
+      "passes": true
+    },
+    {
+      "id": "data-model",
+      "priority": "P0",
+      "description": "Supabase migration 0001_init.sql with rat_observations + ingest_state + PostGIS indexes",
+      "passes": false
+    },
+    {
+      "id": "socrata-client",
+      "priority": "P0",
+      "description": "Typed Socrata SoQL client with pagination + polite rate limiting",
+      "passes": true
+    },
+    {
+      "id": "ingest-311",
+      "priority": "P0",
+      "description": "24-month backfill script for 311 rodent complaints (erm2-nwe9)",
+      "passes": false
+    },
+    {
+      "id": "ingest-rodent",
+      "priority": "P0",
+      "description": "24-month backfill script for DOH rodent inspections (p937-wjvj)",
+      "passes": false
+    },
+    {
+      "id": "daily-ingest",
+      "priority": "P0",
+      "description": "Cron entry point — delta-only ingest since last watermark",
+      "passes": false
+    },
+    {
+      "id": "api-observations",
+      "priority": "P0",
+      "description": "GET /api/observations?bbox=&since=&categories= returns GeoJSON in viewport",
+      "passes": false
+    },
+    {
+      "id": "api-address-search",
+      "priority": "P0",
+      "description": "GET /api/address-search?q= returns matching addresses + nearby observations",
+      "passes": false
+    },
+    {
+      "id": "api-stats",
+      "priority": "P0",
+      "description": "GET /api/stats returns total counts for the header",
+      "passes": false
+    },
+    {
+      "id": "map",
+      "priority": "P0",
+      "description": "Full-bleed MapLibre map centered on NYC, color-coded pins, clustering at low zoom",
+      "passes": false
+    },
+    {
+      "id": "pin-popup",
+      "priority": "P0",
+      "description": "Click a pin → popup with date, category, source, address, source link",
+      "passes": false
+    },
+    {
+      "id": "address-search-ui",
+      "priority": "P0",
+      "description": "Debounced top search bar → fly to address + highlight nearby observations",
+      "passes": false
+    },
+    {
+      "id": "filter-time",
+      "priority": "P0",
+      "description": "Time-range filter (30d / 90d / 1y / 2y / all)",
+      "passes": false
+    },
+    {
+      "id": "filter-category",
+      "priority": "P0",
+      "description": "Category filter checkboxes",
+      "passes": false
+    },
+    {
+      "id": "filter-borough",
+      "priority": "P0",
+      "description": "Borough filter checkboxes",
+      "passes": false
+    },
+    {
+      "id": "about-page",
+      "priority": "P0",
+      "description": "Minimal about page — @mikebatts_ X link, data attribution, source code link",
+      "passes": false
+    },
+    {
+      "id": "mobile-responsive",
+      "priority": "P0",
+      "description": "Map + controls fully responsive on mobile",
+      "passes": false
+    },
+    {
+      "id": "open-source",
+      "priority": "P0",
+      "description": "Public repo with README, LICENSE (MIT), VISION.md, features.json, progress.md",
+      "passes": false
+    },
+    {
+      "id": "backfill-24mo",
+      "priority": "P0",
+      "description": "24 months of 311 + DOH rodent data ingested into Supabase (Mike runs after wiring credentials)",
+      "passes": false
+    },
+    {
+      "id": "daily-cron-live",
+      "priority": "P0",
+      "description": "Daily cron ingest running in production without manual ops (deferred — needs deploy)",
+      "passes": false
+    },
+    {
+      "id": "address-detail-panel",
+      "priority": "P1",
+      "description": "Right slide-out panel: activity summary + chronological list for an address",
+      "passes": false
+    },
+    {
+      "id": "report-a-rat",
+      "priority": "P1",
+      "description": "\"Report a rat here\" link → official 311 form in new tab",
+      "passes": false
+    }
+  ]
+}
