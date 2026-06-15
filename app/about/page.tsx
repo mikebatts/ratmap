@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: `${SITE_NAME} is a free, no-account, no-ads map of every publicly-reported rat sighting, inspection, and 311 complaint in NYC.`,
 };
 
-const REPO_URL = "https://github.com/mikebatts/rats-nyc";
+const REPO_URL = "https://github.com/mikebatts/ratmap";
 
 export default function AboutPage() {
   return (

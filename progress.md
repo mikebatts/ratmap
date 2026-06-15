@@ -35,7 +35,7 @@ adjustments. Code only — no Vercel, no domain, no deploy. Supabase migration
 ready but not run. Ingest scripts ready but not executed.
 
 **Done:**
-- Repo cloned + connected to `mikebatts/rats-nyc`, working on `main`.
+- Repo cloned + connected to `mikebatts/ratmap`, working on `main`.
 - Next.js 15 (App Router) + React 19 + TypeScript + Tailwind + MapLibre scaffold.
 - Loop-pattern files: `VISION.md`, `features.json`, `progress.md`, `AGENTS.md`.
 - `README.md`, `LICENSE` (MIT), `.env.example` with placeholders.

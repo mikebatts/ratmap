@@ -1,5 +1,5 @@
 {
-  "project": "rats-nyc",
+  "project": "ratmap",
   "brief": "memory/projects/rats-nyc-brief-2026-06-15.md",
   "note": "Per the AGENT-LOOPS pattern: each session works one feature, edits only the `passes` field, and leaves clean state. `passes: false` until verified end-to-end against real data/UI.",
   "features": [

@@ -3,8 +3,9 @@
 A free, no-account, no-ads map of every publicly-reported rat sighting,
 inspection, and 311 complaint in New York City.
 
-> The product ships as **ratmap.nyc**. The git repo is `rats-nyc` (and so is
-> the npm package name). The live domain is set via `NEXT_PUBLIC_SITE_URL` and
+> The product ships as **ratmap.nyc**. The git repo is `mikebatts/ratmap`
+> (and so is the npm package name). The live domain is set via
+> `NEXT_PUBLIC_SITE_URL` and
 > can be swapped in one place.
 
 The data is all public — 311 Service Requests and DOHMH Rodent Inspection,
@@ -72,7 +73,7 @@ job pulls only deltas since the last watermark.
 This app is Vercel-native. The repo includes [`vercel.json`](vercel.json),
 which registers a daily cron that hits `/api/cron/daily-ingest`.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/mikebatts/rats-nyc)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/mikebatts/ratmap)
 
 ### Environment variables
 

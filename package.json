@@ -1,5 +1,5 @@
 {
-  "name": "rats-nyc",
+  "name": "ratmap",
   "version": "0.1.0",
   "private": true,
   "description": "A free, no-account, no-ads map of every publicly-reported rat sighting, inspection, and 311 complaint in NYC.",
