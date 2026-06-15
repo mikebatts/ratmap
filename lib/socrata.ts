@@ -166,7 +166,7 @@ export function normalizeRodent(row: RawRodent): RatObservationInsert | null {
 }
 
 /** DOH boro_code (1–5) → borough name. */
-function boroFromCode(code: string | undefined): string | null {
+export function boroFromCode(code: string | undefined): string | null {
   switch (code) {
     case "1":
       return "MANHATTAN";
