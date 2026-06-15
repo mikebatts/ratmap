@@ -4,6 +4,30 @@ Durable state log. Append an entry every iteration. Newest at top.
 
 ---
 
+## 2026-06-15 — Map UI verified + first commit (Claude Opus 4.8)
+
+**Session goal:** Finish + verify the map UI from the prior scaffold and land
+the first commit. The scaffold session built every file but never committed.
+
+**Verified this session:**
+- MapLibre `4.7.1` present in `package.json` and installed (ships its own
+  types — no separate `@types/maplibre-gl` needed/added).
+- All six components present and complete: `Map.tsx` (clustered, color-coded
+  pins, popup on click, fly-to on search), `MapControls.tsx` (zoom + recenter
+  to NYC), `AddressSearch.tsx` (debounced), `ObservationPopup.tsx`,
+  `FilterPanel.tsx` (time range / category / borough), `AddressDetail.tsx`
+  (right slide-out, P1).
+- `app/page.tsx` (map page w/ search, about link, legend, footer attribution)
+  and `app/about/page.tsx` (minimal — `@mikebatts_` + attribution + source).
+- `lib/map.ts` constants/helpers wired to all components.
+- `npm run build` ✓ — `npm run lint` ✓ (no warnings/errors) — `npm run dev`
+  boots, `/` and `/about` both return 200.
+- Defensive fetching confirmed: builds + renders with empty/placeholder Supabase.
+
+**First commit:** "Add map UI, components, about page, /api/* routes ready".
+
+---
+
 ## 2026-06-15 — Initial scaffold (Claude Opus 4.8)
 
 **Session goal:** Scaffold the full MVP per the 2026-06-15 brief + Mike's
