@@ -14,6 +14,8 @@ import type { ObservationFeature } from "@/lib/types";
 import { buildPopupHTML } from "./ObservationPopup";
 
 const SOURCE_ID = "observations";
+const HIGHLIGHT_SOURCE_ID = "fly-highlight";
+const HIGHLIGHT_LAYER_ID = "fly-highlight-circle";
 
 export interface MapFilters {
   since: string | null;
@@ -46,6 +48,7 @@ export default function Map({
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const filtersRef = useRef(filters);
   const fetchSeq = useRef(0);
+  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   filtersRef.current = filters;
 
@@ -164,6 +167,37 @@ export default function Map({
         },
       });
 
+      // Transient highlight ring for the search fly-to target. Sits above the
+      // points so the searched location is unmistakable for a few seconds.
+      map.addSource(HIGHLIGHT_SOURCE_ID, {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: HIGHLIGHT_LAYER_ID,
+        type: "circle",
+        source: HIGHLIGHT_SOURCE_ID,
+        paint: {
+          // ~50m on the ground at the fly-to zoom (16) ≈ 15px.
+          "circle-radius": [
+            "interpolate",
+            ["exponential", 2],
+            ["zoom"],
+            12,
+            6,
+            16,
+            15,
+            20,
+            48,
+          ],
+          "circle-color": "#F5C518",
+          "circle-opacity": 0.25,
+          "circle-stroke-color": "#F5C518",
+          "circle-stroke-width": 2,
+          "circle-stroke-opacity": 0.9,
+        },
+      });
+
       // Interactions.
       map.on("click", "clusters", (e) => {
         const feats = map.queryRenderedFeatures(e.point, { layers: ["clusters"] });
@@ -220,11 +254,48 @@ export default function Map({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.since, filters.categories, filters.boroughs]);
 
-  // Fly to a search target + drop a highlight.
+  // Fly to a search target + drop a transient highlight ring at the target.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !flyTarget) return;
+
     map.flyTo({ center: [flyTarget.lng, flyTarget.lat], zoom: 16, speed: 1.2 });
+
+    const setHighlight = (features: GeoJSON.Feature[]) => {
+      const src = map.getSource(HIGHLIGHT_SOURCE_ID) as GeoJSONSource | undefined;
+      if (src) src.setData({ type: "FeatureCollection", features });
+    };
+
+    const clear = () => {
+      setHighlight([]);
+      if (highlightTimer.current) {
+        clearTimeout(highlightTimer.current);
+        highlightTimer.current = null;
+      }
+      map.off("moveend", clear);
+    };
+
+    const drop = () => {
+      setHighlight([
+        {
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [flyTarget.lng, flyTarget.lat] },
+          properties: {},
+        },
+      ]);
+      // Clear after ~5s, or on the next manual pan/zoom (whichever comes first).
+      if (highlightTimer.current) clearTimeout(highlightTimer.current);
+      highlightTimer.current = setTimeout(clear, 5000);
+      map.once("moveend", () => map.once("moveend", clear));
+    };
+
+    // Source may not exist yet if the map is still loading.
+    if (map.getSource(HIGHLIGHT_SOURCE_ID)) drop();
+    else map.once("load", drop);
+
+    return () => {
+      if (highlightTimer.current) clearTimeout(highlightTimer.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flyTarget?.nonce]);
 
