@@ -4,14 +4,28 @@ import { useState } from "react";
 import { TIME_RANGES, type TimeRange } from "@/lib/map";
 import { BOROUGHS, CATEGORY_META, type Category } from "@/lib/types";
 
-// Categories surfaced as filter checkboxes (grouped — we collapse the long
-// taxonomy into the five the brief calls out).
-const FILTER_CATEGORIES: { key: Category; label: string }[] = [
-  { key: "sighting", label: CATEGORY_META.sighting.label },
-  { key: "inspection_fail", label: CATEGORY_META.inspection_fail.label },
-  { key: "inspection_pass", label: CATEGORY_META.inspection_pass.label },
-  { key: "baiting", label: "Baiting / cleanup" },
-  { key: "other_rodent", label: "Other rodent" },
+// Categories surfaced as filter checkboxes. Each checkbox controls a `group`
+// of one or more underlying categories so the full taxonomy is reachable
+// without a checkbox per fine-grained category. The `key` is the category
+// whose color swatch represents the group.
+const FILTER_CATEGORIES: { key: Category; label: string; group: Category[] }[] = [
+  { key: "sighting", label: CATEGORY_META.sighting.label, group: ["sighting"] },
+  {
+    key: "inspection_fail",
+    label: CATEGORY_META.inspection_fail.label,
+    group: ["inspection_fail"],
+  },
+  {
+    key: "inspection_pass",
+    label: CATEGORY_META.inspection_pass.label,
+    group: ["inspection_pass"],
+  },
+  { key: "baiting", label: "Baiting / cleanup", group: ["baiting", "cleanup"] },
+  {
+    key: "other_rodent",
+    label: "Other (mice, conditions, etc.)",
+    group: ["other_rodent", "condition", "other"],
+  },
 ];
 
 export interface FilterState {
@@ -28,13 +42,12 @@ interface FilterPanelProps {
 export default function FilterPanel({ value, onChange }: FilterPanelProps) {
   const [open, setOpen] = useState(false);
 
-  function toggleCategory(cat: Category) {
-    const has = value.categories.includes(cat);
-    // "baiting" filter also implies "cleanup".
-    const group: Category[] = cat === "baiting" ? ["baiting", "cleanup"] : [cat];
+  function toggleGroup(group: Category[]) {
+    // A group is "on" when its representative (first) category is selected.
+    const has = value.categories.includes(group[0]);
     const next = has
       ? value.categories.filter((c) => !group.includes(c))
-      : [...value.categories, ...group];
+      : [...value.categories, ...group.filter((c) => !value.categories.includes(c))];
     onChange({ ...value, categories: next });
   }
 
@@ -91,9 +104,8 @@ export default function FilterPanel({ value, onChange }: FilterPanelProps) {
             </legend>
             <div className="space-y-1.5">
               {FILTER_CATEGORIES.map((c) => {
-                const checked =
-                  value.categories.length === 0 ||
-                  value.categories.includes(c.key);
+                const selected = value.categories.includes(c.key);
+                const checked = value.categories.length === 0 || selected;
                 return (
                   <label
                     key={c.key}
@@ -101,8 +113,8 @@ export default function FilterPanel({ value, onChange }: FilterPanelProps) {
                   >
                     <input
                       type="checkbox"
-                      checked={value.categories.includes(c.key)}
-                      onChange={() => toggleCategory(c.key)}
+                      checked={selected}
+                      onChange={() => toggleGroup(c.group)}
                       className="h-4 w-4 accent-hotdog"
                     />
                     <span
