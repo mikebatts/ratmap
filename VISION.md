@@ -1,8 +1,8 @@
-# VISION — Rats.nyc
+# VISION — ratmap.nyc
 
 ## Goal
 
-Ship a v1 of **Rats.nyc**: a free, map-based web app that surfaces every
+Ship a v1 of **ratmap.nyc**: a free, map-based web app that surfaces every
 publicly-reported rat sighting, inspection, and 311 complaint in New York City,
 plotted on a fast interactive map. New Yorkers can search an address and see the
 rat history of that exact building or block. The data is all public; the app's

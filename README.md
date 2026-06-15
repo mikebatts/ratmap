@@ -1,12 +1,11 @@
-# deadrat.nyc
+# ratmap.nyc
 
 A free, no-account, no-ads map of every publicly-reported rat sighting,
 inspection, and 311 complaint in New York City.
 
-> The product ships as **deadrat.nyc**. The git repo is `rats-nyc` (and so is
+> The product ships as **ratmap.nyc**. The git repo is `rats-nyc` (and so is
 > the npm package name). The live domain is set via `NEXT_PUBLIC_SITE_URL` and
-> can be swapped in one place — candidates: `deadrat.nyc`, `ratmap.nyc`,
-> `whereitsat.nyc`.
+> can be swapped in one place.
 
 The data is all public — 311 Service Requests and DOHMH Rodent Inspection,
 straight from [NYC Open Data](https://opendata.cityofnewyork.us/). This app's
@@ -85,13 +84,13 @@ Set these in **Vercel → Project → Settings → Environment Variables**:
 | `SUPABASE_ANON_KEY`          | ✅       | Read-only key, used by API routes.                               |
 | `SUPABASE_SERVICE_ROLE_KEY`  | ✅       | Write key, used **only** by the cron ingest. Never sent to the browser. |
 | `CRON_SECRET`                | ✅       | Long random string. Vercel sends it as a bearer token to the cron route. |
-| `NEXT_PUBLIC_SITE_URL`       | ✅       | Canonical URL, e.g. `https://deadrat.nyc`. Drives metadata + OG image. |
+| `NEXT_PUBLIC_SITE_URL`       | ✅       | Canonical URL, e.g. `https://ratmap.nyc`. Drives metadata + OG image. |
 | `SOCRATA_APP_TOKEN`          | optional | Raises NYC Open Data rate limits.                                |
 | `NEXT_PUBLIC_MAPTILER_KEY`   | optional | Basemap tiles; falls back to a free no-key style.                |
 
 ### Custom domain
 
-Add your domain (e.g. `deadrat.nyc`) under **Vercel → Project → Settings →
+Add your domain (e.g. `ratmap.nyc`) under **Vercel → Project → Settings →
 Domains**, then set `NEXT_PUBLIC_SITE_URL` to match. To switch domains later,
 change only that one variable and redeploy.
 
@@ -114,7 +113,7 @@ This project uses 1 job × 1 run/day — well within the limit.
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" \
-  https://deadrat.nyc/api/cron/daily-ingest
+  https://ratmap.nyc/api/cron/daily-ingest
 ```
 
 ## Project conventions

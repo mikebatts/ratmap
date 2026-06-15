@@ -1,11 +1,8 @@
 // Canonical site identity. Swap the domain in ONE place: set
 // NEXT_PUBLIC_SITE_URL in the environment (Vercel project settings or
 // .env.local). Falls back to the production domain, then localhost in dev.
-//
-// Candidate domains under consideration: deadrat.nyc, ratmap.nyc,
-// whereitsat.nyc — change DEFAULT_PROD_URL (or just set the env var) to swap.
 
-const DEFAULT_PROD_URL = "https://deadrat.nyc";
+const DEFAULT_PROD_URL = "https://ratmap.nyc";
 
 /** Absolute base URL for the site (no trailing slash). */
 export const SITE_URL = (
@@ -15,11 +12,11 @@ export const SITE_URL = (
     : "http://localhost:3000")
 ).replace(/\/$/, "");
 
-/** Bare hostname, used as the wordmark in the UI (e.g. "deadrat.nyc"). */
+/** Bare hostname, used as the wordmark in the UI (e.g. "ratmap.nyc"). */
 export const SITE_NAME = (() => {
   try {
     return new URL(SITE_URL).host;
   } catch {
-    return "deadrat.nyc";
+    return "ratmap.nyc";
   }
 })();

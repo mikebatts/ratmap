@@ -1,4 +1,4 @@
--- Rats.nyc — initial schema
+-- ratmap.nyc — initial schema
 -- Unified observations from 311 (erm2-nwe9) and DOHMH Rodent Inspection (p937-wjvj).
 -- Run against a Supabase Postgres project with PostGIS available.
 

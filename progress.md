@@ -1,4 +1,4 @@
-# Progress Log — Rats.nyc
+# Progress Log — ratmap.nyc
 
 Durable state log. Append an entry every iteration. Newest at top.
 

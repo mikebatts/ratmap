@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-// Supabase clients for Rats.nyc.
+// Supabase clients for ratmap.nyc.
 //
 // Two flavors:
 //   - getServerClient(): anon key, read-only, used by API routes.

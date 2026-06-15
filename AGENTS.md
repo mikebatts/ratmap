@@ -1,4 +1,4 @@
-# AGENTS.md — Rats.nyc
+# AGENTS.md — ratmap.nyc
 
 Read `VISION.md` (goal, non-negotiables, stop condition) and `features.json`
 (per-feature `passes` state) at the start of every session. Append to

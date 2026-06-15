@@ -19,8 +19,8 @@ describe("site config", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.resetModules();
     const { SITE_URL, SITE_NAME } = await import("./site");
-    expect(SITE_URL).toBe("https://deadrat.nyc");
-    expect(SITE_NAME).toBe("deadrat.nyc");
+    expect(SITE_URL).toBe("https://ratmap.nyc");
+    expect(SITE_NAME).toBe("ratmap.nyc");
   });
 
   it("falls back to localhost in development", async () => {
