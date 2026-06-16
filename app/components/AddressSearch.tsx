@@ -144,7 +144,7 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
         aria-autocomplete="list"
         aria-activedescendant={active >= 0 ? `addr-opt-${active}` : undefined}
         autoComplete="off"
-        className="glass w-full rounded-full py-3 pl-10 pr-4 text-sm font-medium text-content placeholder:font-normal placeholder:text-content-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 [&:focus]:bg-[rgb(var(--glass)/0.9)]"
+        className="glass w-full rounded-full py-3 pl-10 pr-4 text-base font-medium text-content placeholder:font-normal placeholder:text-content-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 [&:focus]:bg-[rgb(var(--glass)/0.92)]"
       />
       {open && (
         <ul
@@ -152,7 +152,9 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
           id={LIST_ID}
           role="listbox"
           aria-label="Address results"
-          className="glass-strong animate-pop-in themed-scroll absolute z-20 mt-2 max-h-80 w-full overflow-auto rounded-2xl p-1 [transform-origin:top]"
+          className="glass-strong animate-pop-in themed-scroll absolute z-20 max-h-[min(20rem,40dvh)] w-full overflow-auto rounded-2xl p-1
+                     bottom-full mb-2 [transform-origin:bottom]
+                     sm:bottom-auto sm:top-full sm:mb-0 sm:mt-2 sm:[transform-origin:top]"
         >
           {loading && (
             <li className="px-4 py-3 text-sm text-content-muted">Searching…</li>

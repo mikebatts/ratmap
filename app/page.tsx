@@ -6,6 +6,7 @@ import Map, { type FlyTarget, type MapFilters } from "./components/Map";
 import MapControls from "./components/MapControls";
 import AddressSearch, { type AddressMatch } from "./components/AddressSearch";
 import FilterPanel, { type FilterState } from "./components/FilterPanel";
+import FilterSheet from "./components/FilterSheet";
 import AddressDetail from "./components/AddressDetail";
 import AboutModal from "./components/AboutModal";
 import ThemeToggle from "./components/ThemeToggle";
@@ -28,6 +29,7 @@ export default function Home() {
   const [flyTarget, setFlyTarget] = useState<FlyTarget | null>(null);
   const [selected, setSelected] = useState<AddressMatch | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [dataError, setDataError] = useState(false);
   const [retryNonce, setRetryNonce] = useState(0);
 
@@ -79,57 +81,90 @@ export default function Home() {
         retryNonce={retryNonce}
       />
 
-      {/* Top bar: brand (left) · search (center) · control cluster (right).
-          One clear hierarchy — identity, the primary action, then tools. */}
-      <header className="safe-t safe-x pointer-events-none absolute inset-x-0 top-0 z-20 p-3 sm:p-4">
-        <div className="pointer-events-auto mx-auto flex max-w-5xl flex-col gap-2.5 sm:flex-row sm:items-start sm:gap-3">
-          {/* On mobile this wraps brand + tools onto one row (search below);
-              on sm+ it dissolves (contents) so it's brand · search · tools. */}
-          <div className="flex items-start justify-between gap-2 sm:contents">
-            {/* Brand */}
-            <div className="glass animate-rise-in flex shrink-0 items-center gap-2.5 self-start rounded-full py-2 pl-3.5 pr-4 sm:order-1">
-              <span className="text-xl leading-none" aria-hidden="true">
-                🐭
-              </span>
-              <span className="flex items-baseline gap-2">
-                <span className="font-display text-[17px] font-bold tracking-tight text-content">
-                  {brandName}
-                  <span className="text-accent">{brandTld}</span>
-                </span>
-                <span className="hidden text-xs font-medium text-content-muted sm:inline">
-                  {total !== null && total > 0
-                    ? `${total.toLocaleString()} reports`
-                    : "NYC's rat map"}
-                </span>
-              </span>
-            </div>
+      {/* Brand — floating, top-left (both breakpoints) */}
+      <div className="safe-t safe-x pointer-events-none absolute left-0 top-0 z-20 p-3 sm:p-4">
+        <div className="glass animate-rise-in pointer-events-auto inline-flex items-center gap-2.5 rounded-full py-2 pl-3.5 pr-4">
+          <span className="text-xl leading-none" aria-hidden="true">
+            🐭
+          </span>
+          <span className="flex items-baseline gap-2">
+            <span className="font-display text-[17px] font-bold tracking-tight text-content">
+              {brandName}
+              <span className="text-accent">{brandTld}</span>
+            </span>
+            <span className="hidden text-xs font-medium text-content-muted sm:inline">
+              {total !== null && total > 0
+                ? `${total.toLocaleString()} reports`
+                : "NYC's rat map"}
+            </span>
+          </span>
+        </div>
+      </div>
 
-            {/* Tools — one grouped glass capsule (iOS-26 floating controls) */}
-            <div className="glass animate-rise-in flex shrink-0 items-center gap-1 self-start rounded-full p-1 sm:order-3">
-              <button
-                type="button"
-                onClick={() => setAboutOpen(true)}
-                className={`${seg} px-3.5`}
-              >
-                About
-              </button>
-              <ThemeToggle
-                className={`group ${seg} w-9 justify-center text-content`}
-              />
-              <FilterPanel
-                value={filters}
-                onChange={setFilters}
-                triggerClassName={`${seg} gap-1.5 px-3.5 font-semibold`}
-              />
-            </div>
-          </div>
+      {/* Controls — floating, top-right */}
+      <div className="safe-t safe-x pointer-events-none absolute right-0 top-0 z-20 flex justify-end p-3 sm:p-4">
+        {/* Desktop: grouped glass capsule (iOS-26 floating controls) */}
+        <div className="glass animate-rise-in pointer-events-auto hidden items-center gap-1 rounded-full p-1 sm:flex">
+          <button
+            type="button"
+            onClick={() => setAboutOpen(true)}
+            className={`${seg} px-3.5`}
+          >
+            About
+          </button>
+          <ThemeToggle className={`group ${seg} w-9 justify-center text-content`} />
+          <FilterPanel
+            value={filters}
+            onChange={setFilters}
+            triggerClassName={`${seg} gap-1.5 px-3.5 font-semibold`}
+          />
+        </div>
+        {/* Mobile: theme + About as separate touch targets (Filters lives in the
+            bottom search bar so it's thumb-reachable) */}
+        <div className="pointer-events-auto flex items-center gap-2 sm:hidden">
+          <ThemeToggle className="glass glass-interactive group flex h-11 w-11 items-center justify-center rounded-full text-content" />
+          <button
+            type="button"
+            onClick={() => setAboutOpen(true)}
+            className="glass glass-interactive flex h-11 items-center rounded-full px-4 text-sm font-medium text-content"
+          >
+            About
+          </button>
+        </div>
+      </div>
 
-          {/* Primary action — address search */}
-          <div className="animate-rise-in order-2 min-w-0 flex-1 sm:order-2">
+      {/* Search — top-center on desktop, thumb-reachable bottom bar on mobile.
+          Single instance; its dropdown opens up on mobile, down on desktop. */}
+      <div
+        className={`safe-x pointer-events-none absolute inset-x-0 z-30 px-3 sm:px-4
+          bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]
+          sm:bottom-auto sm:top-0 sm:pb-0 sm:pt-[max(1rem,env(safe-area-inset-top))]
+          ${selected ? "max-sm:hidden" : ""}`}
+      >
+        <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-2">
+          <div className="animate-rise-in min-w-0 flex-1">
             <AddressSearch onSelect={handleSelect} />
           </div>
+          {/* Mobile Filters trigger → bottom sheet */}
+          <button
+            type="button"
+            onClick={() => setFilterSheetOpen(true)}
+            aria-label="Filters"
+            className="glass glass-interactive animate-rise-in flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-content sm:hidden"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M4 6h16M7 12h10M10 18h4" />
+            </svg>
+          </button>
         </div>
-      </header>
+      </div>
+
+      <FilterSheet
+        open={filterSheetOpen}
+        value={filters}
+        onChange={setFilters}
+        onClose={() => setFilterSheetOpen(false)}
+      />
 
       <MapControls map={map} />
 
@@ -185,9 +220,9 @@ export default function Home() {
         </ul>
       </div>
 
-      {/* Footer attribution — always visible. Sits the same distance off the
-          bottom edge as the legend (bottom-8) for a balanced baseline. */}
-      <footer className="safe-b safe-x pointer-events-none absolute inset-x-0 bottom-8 z-10 px-2 text-center">
+      {/* Footer attribution — desktop only (the mobile bottom is the search
+          bar; the same credit lives in the About sheet). */}
+      <footer className="safe-x pointer-events-none absolute inset-x-0 bottom-8 z-10 hidden px-2 text-center sm:block">
         <p className="glass pointer-events-auto inline-block rounded-full px-3 py-1 text-[11px] text-content-muted">
           Made with{" "}
           <span aria-hidden="true" className="text-accent">

@@ -4,6 +4,32 @@ Durable state log. Append an entry every iteration. Newest at top.
 
 ---
 
+## 2026-06-16 — Mobile optimization + iOS Safari pass (Claude Opus 4.8)
+
+Grounded in Mobbin Apple Maps **iOS** refs (search-in-bottom-sheet, options-as-
+bottom-sheet, floating right-side controls). Desktop layout unchanged.
+
+- **Filter bug fixed:** on mobile the filter dropdown rendered under the address
+  search. Extracted `FilterControls` (shared fields); desktop keeps the dropdown
+  (`FilterPanel`), mobile now opens a **bottom sheet** (`FilterSheet` — grabber,
+  Filters title, Done, dimmed map). No more overlap.
+- **Reachability:** mobile search moved to a **thumb-reachable bottom bar** (with a
+  Filters button beside it); its dropdown opens **upward**. Brand floats top-left,
+  theme+About top-right, map controls raised to clear the bottom bar; footer hidden
+  on mobile (credit is in About). Detail card is a bottom sheet and hides the search
+  bar while open.
+- **iOS Safari hardening:** all inputs **16px** (no focus-zoom), `-webkit-text-size-
+  adjust`, killed tap-flash + rubber-band overscroll, `touch-action: manipulation`,
+  safe-area insets via `env()` on the floating bars, `dvh`.
+- Page overlays refactored into independent floating elements (single AddressSearch
+  instance, positioned responsively) — more Apple-Maps-like, no duplicate state.
+
+**Verified:** typecheck ✓, 115 tests ✓, lint ✓. Playwright iPhone 13 light+dark:
+input font 16px, filter bottom sheet works, search opens upward, detail sheet hides
+search bar, 0 console errors (`scripts/m-*.png`).
+
+---
+
 ## 2026-06-16 — Production hardening: alerting, health, error handling (Claude Opus 4.8)
 
 Live on ratmap.nyc (apex → www) serving 14k rows after Supabase env vars were set
