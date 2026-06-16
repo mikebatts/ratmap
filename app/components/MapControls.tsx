@@ -9,14 +9,14 @@ interface MapControlsProps {
 
 export default function MapControls({ map }: MapControlsProps) {
   const btn =
-    "flex h-10 w-10 items-center justify-center bg-white text-ink shadow-md transition-colors hover:bg-cream focus:outline-none focus:ring-2 focus:ring-hotdog";
+    "flex h-11 w-11 items-center justify-center text-content transition-[background-color,transform] duration-200 hover:bg-content/10 active:scale-90 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent";
 
   return (
-    <div className="absolute bottom-24 right-4 z-10 flex flex-col gap-px overflow-hidden rounded-lg sm:bottom-8">
+    <div className="glass animate-rise-in absolute bottom-24 right-4 z-10 flex flex-col divide-y divide-hairline overflow-hidden rounded-2xl sm:bottom-8">
       <button
         type="button"
         aria-label="Zoom in"
-        className={`${btn} rounded-t-lg`}
+        className={btn}
         onClick={() => map?.zoomIn()}
       >
         <span className="text-xl leading-none">+</span>
@@ -32,7 +32,7 @@ export default function MapControls({ map }: MapControlsProps) {
       <button
         type="button"
         aria-label="Recenter to NYC"
-        className={`${btn} rounded-b-lg text-xs font-semibold`}
+        className={`${btn} text-xs font-semibold`}
         onClick={() =>
           map?.flyTo({ center: NYC_CENTER, zoom: NYC_ZOOM, speed: 1.2 })
         }

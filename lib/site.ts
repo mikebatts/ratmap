@@ -12,7 +12,7 @@ export const SITE_URL = (
     : "http://localhost:3000")
 ).replace(/\/$/, "");
 
-/** Bare hostname, used as the wordmark in the UI (e.g. "ratmap.nyc"). */
+/** Bare hostname, used for metadata/canonical URLs (e.g. "ratmap.nyc"). */
 export const SITE_NAME = (() => {
   try {
     return new URL(SITE_URL).host;
@@ -20,3 +20,10 @@ export const SITE_NAME = (() => {
     return "ratmap.nyc";
   }
 })();
+
+/**
+ * The brand wordmark shown in the UI. This is the product's name and never the
+ * deploy host, so local/preview builds still read "RATMAP.NYC" (not
+ * "localhost:3000"). The 🐭 mark precedes it in the header.
+ */
+export const SITE_WORDMARK = "RATMAP.NYC";

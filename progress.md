@@ -4,6 +4,200 @@ Durable state log. Append an entry every iteration. Newest at top.
 
 ---
 
+## 2026-06-16 — Address formatting, search hardening, 311 fix, Apple-Maps side sheet (Claude Opus 4.8)
+
+**Address formatting:** GeoSearch returns ALL-CAPS, ordinal-less names. New
+`lib/address.ts` (`ordinal`/`formatStreet`/`formatAddress`) → "20 WEST 34 STREET"
+becomes **"20 West 34th Street"**; preserves acronyms (FDR), lowercases minor words
+("Avenue of the Americas"), keeps hyphenated Queens house numbers ("145-03"). Unit-
+tested. Applied in the route.
+
+**Search hardening (UX / edge cases / errors):**
+- Out-of-order response guard (`reqSeq`) + `AbortController` on each keystroke.
+- Distinct **error state** — route returns `{error:true}` on geocoder timeout/non-OK;
+  UI shows "Couldn't reach address search…" vs. "No matches…".
+- Dedupe identical address+borough; 4s geocoder timeout; always 200.
+
+**“Report a rat” CTA fix:** was `KA-01010` (wrong); now **`KA-01107` — NYC311 "Rat or
+Mouse Complaint"** (the actual report flow).
+
+**Side sheet → Apple-Maps liquid-glass place card:** floating rounded-3xl glass card
+(desktop top-right, mobile bottom sheet) instead of an edge-to-edge panel. Circular
+glass close button, activity summary pill, action row (primary "Report a rat → 311" +
+circular "Open in Maps" via `maps.apple.com`), sticky header, scrollable "Recent
+activity". Count/most-recent derived from fetched features.
+
+**Mobbin MCP** added to user config (`api.mobbin.com/mcp`) for design reference —
+connects via OAuth on next restart.
+
+**Verified:** typecheck ✓, **111 tests** ✓ (added `lib/address.test.ts`, geocoder +
+error + dedupe cases; updated sheet copy assertions), lint ✓. Live: addresses format
+correctly; sheet looks Apple-Maps-grade both themes; UX + toggle + popup regressions
+PASS; 0 console errors.
+
+---
+
+## 2026-06-16 — Real address autocomplete (NYC GeoSearch) (Claude Opus 4.8)
+
+**Problem:** address search only matched addresses that already had a rat report
+(ILIKE over `rat_observations`), so typing your home address returned nothing.
+
+**Fix:** `/api/address-search` now proxies **NYC Planning Labs GeoSearch** (Pelias)
+— free, no API key, NYC-scoped autocomplete — so any NYC address resolves. Proxied
+server-side (no CORS), 4s timeout, defensive (always 200). `AddressMatch` slimmed to
+`{address, borough, latitude, longitude}` (no rat count from the geocoder).
+`AddressDetail` now derives the count + most-recent date from the observations it
+fetches near the point (bbox widened to ~150m ≈ one block), and shows a graceful
+"No rat reports recorded nearby." empty state. Search dropdown shows a location pin
+instead of a count badge. (The unused trigram index in `0001_init.sql` is now
+dormant — harmless.)
+
+**Verified:** typecheck ✓, 101 tests ✓ (rewrote route test to mock GeoSearch; added
+geocoder cases), lint ✓. Live: "20 W 34th St" → resolves → flies there → panel shows
+nearby reports; addresses with no reports resolve cleanly. 0 console errors.
+
+---
+
+## 2026-06-16 — Theme-toggle marker bug + About modal + attribution (Claude Opus 4.8)
+
+**Critical bug:** toggling the theme made all dots/markers vanish (and stay gone).
+Root cause — `map.once("style.load", …)` but **MapLibre has no `style.load`
+event** (only `styledata`/`load`), so layers were never re-added after `setStyle`.
+A `styledata` + `isStyleLoaded()` attempt still raced (old style lingers, then the
+event stream goes quiet before isStyleLoaded flips true). Final fix: a short poll
+that re-adds the instant the new style is loaded AND our source is wiped. Also made
+`addDataLayers` idempotent (tears down `DATA_LAYER_IDS` + sources first). Regression:
+`scripts/qa-toggle.mjs` (markers survive light→dark→light).
+
+**UX requests:**
+- Footer (“Made with ♥ in NYC …”) moved to `bottom-8` to match the legend's gap.
+- Removed the on-map MapLibre attribution (`attributionControl: false`); OSM /
+  OpenFreeMap credit now lives in the About content.
+- **About is now a liquid-glass modal** over the live map (dimmed + blurred
+  backdrop, glass-strong card, Escape/backdrop/✕ close, focus-on-open). Shared
+  `AboutContent` powers both the modal and the `/about` route.
+
+**Verified:** typecheck ✓, 100 tests ✓, lint ✓. Playwright: toggle regression PASS,
+9 UX checks PASS, popup-anchor PASS; About modal opens + Esc-closes both themes; 0
+console errors.
+
+---
+
+## 2026-06-16 — Production UX sweep + popup bug fix (Claude Opus 4.8)
+
+**Goal:** Catch bugs and polish to production quality across functionality + CSS/UX.
+
+**Critical bug fixed:** clicking a dot opened the popup in the top-left corner.
+Cause — `rm-rise-in` animated `transform` on `.maplibregl-popup`, overriding
+MapLibre's inline positioning transform (`transform: none` at keyframe end). Fix:
+animate the inner `.maplibregl-popup-content` + fade the container only. Locked in
+with a Playwright regression (`scripts/qa-popup-anchor.mjs`).
+
+**Keyboard / a11y / focus:**
+- Escape closes popup, detail panel, and filter panel; filter panel also closes
+  on outside click. Detail panel is `role="dialog"`, focuses its close button on
+  open. All gated with proper cleanup.
+- AddressSearch is now a real ARIA combobox: arrow-key nav, Enter selects,
+  Escape closes, `aria-expanded/activedescendant`, `role=listbox/option`.
+- focus-visible rings on glass controls, close button, report CTA.
+
+**Mobile / responsive:** safe-area insets (`.safe-t/.safe-b/.safe-x`) for notch +
+home indicator on header, footer, detail panel, and MapLibre controls. Header
+reflows so brand + tools share one row with search below on mobile (single row on
+sm+). Popup `maxWidth: min(290px, 100vw-28px)`; long addresses wrap.
+
+**CSS audit:** global `prefers-reduced-motion` safety net (covers inline Tailwind
+transitions, not just `.animate-*`); `scrollIntoView` guarded for SSR/jsdom.
+
+**Verified:** typecheck ✓, **100 tests** ✓ (added keyboard/ARIA/Escape tests),
+lint ✓, **`next build` ✓**. Playwright: popup-anchor regression PASS; 9 UX
+interaction checks PASS (Escape/outside-click/keyboard/mobile); 0 console errors
+light + dark + mobile.
+
+---
+
+## 2026-06-16 — Authentic Liquid Glass + creative/motion pass (Claude Opus 4.8)
+
+**Goal:** Make the glass read like Apple's iOS 26 Liquid Glass and take the whole
+UI up a tier — interactions, motion, marker craft, hierarchy, NYC pride.
+
+**Liquid Glass (researched — Mobbin MCP not available):**
+- The "glass" read = clear/transparent pane + saturation lift + bright specular
+  rim + EDGE REFRACTION. Rebuilt `.glass`/`.glass-strong` accordingly (low tint
+  alpha via `--glass-a`, layered specular box-shadows, top sheen).
+- Real refraction via an SVG `feTurbulence → feDisplacementMap` filter
+  (`#liquid-glass` in `layout.tsx`) applied through `backdrop-filter: url(#…)`.
+  **Chromium-only** (Safari/Firefox don't support SVG-in-backdrop, confirmed
+  June 2026) → gated behind a `.glass-refract` class set by a JS Chromium check;
+  everyone else gets the rich static-glass fallback. No one sees a broken effect.
+
+**Markers fixed + elevated (`Map.tsx`, `lib/map.ts`):**
+- Removed the weird white specular bead on dots (the user's complaint).
+- Clusters are now translucent **glass chips** (heat-tinted, see-through, bright
+  rim, glow) with the count. Dots are clean glassy discs + soft glow.
+- Hover lights up + grows the feature under the cursor (`feature-state` hover,
+  `generateId: true`).
+
+**Motion + interaction system (`globals.css`):**
+- Keyframes (fade/pop/slide/rise/pulse) + `prefers-reduced-motion` guard.
+- `.glass-interactive` press/hover physics; popup rises in (`.rm-popup`); panels
+  slide/pop in; theme toggle cross-fades sun/moon; chips/rows have hover+active.
+
+**Hierarchy + NYC love (`page.tsx`):**
+- Top bar reorganized into clear groups: brand · search · tools (About + theme +
+  Filters) as one cohesive 44px cluster; Filters dropdown now floats (absolute).
+- Polished popup into a glass report card (category chip + accent source link).
+- Footer: "Made with ♥ in NYC". Legend swatches glow.
+- Wordmark locked to `SITE_WORDMARK = "RATMAP.NYC"` (no more dev-host leak).
+
+**Verified:** typecheck ✓, 97 tests ✓, lint ✓. Playwright light+dark+mobile +
+high-DPI close-ups: **0 console errors** both themes; refraction active in
+Chromium; dot-bead gone; cluster chips + popup confirmed.
+
+---
+
+## 2026-06-16 — Data wired live + font fix + major design/branding pass (Claude Opus 4.8)
+
+**Session goal:** Local QA against real data, then a high-bar design & branding pass.
+
+**Data wired (real Supabase, project `ratmap` / ref `vanwbtatebyykqxznrqv`):**
+- Applied `0001_init.sql` over Postgres; verified `rat_observations`, `ingest_state`,
+  PostGIS, trigram index, `observations_in_bbox` RPC, RLS read policy.
+- Ingested ~14k recent observations (bounded `--since 2026-04-01`, not the full 24-mo
+  backfill): 6,132 from 311 + 7,868 rodent inspections.
+- Verified end-to-end: `/api/stats` (14k), `/api/observations` (GeoJSON), address
+  search (25 matches), cron route 401 without auth. Flipped 16 verified P0/P1 flags.
+
+**Bug fixed:** map cluster labels 404'd on `Open Sans` glyphs (MapLibre default) — the
+tile servers only host **Noto Sans**. Pinned `text-font: ["Noto Sans Regular"]`.
+
+**Design & branding pass (full send, all surfaces):**
+- **Theming engine** — `ThemeProvider` (follows OS, manual toggle, localStorage),
+  no-flash inline script in `layout.tsx`, `darkMode: "class"`, semantic CSS-var tokens
+  in `globals.css` mapped to Tailwind (`surface`/`content`/`accent`/`hairline`).
+- **Liquid glass** — `.glass` / `.glass-strong` utilities (blur + saturate + specular
+  edge + `@supports` fallback) applied to every overlay (header, search, filters,
+  controls, legend, footer, popup, detail panel, about).
+- **Map** — `basemapStyle(resolved)` swaps positron ↔ dark (OpenFreeMap; note: the dark
+  style is `/styles/dark`, **not** `dark-matter` which 404s). `setStyle` re-adds layers
+  on theme change. Redesigned clusters (neon glow halo) + adaptive dot strokes.
+- **Brand** — `🐭 RATMAP.NYC` wordmark, emoji favicon (`icon.svg`), refreshed OG image.
+- **VISION.md** — rewrote the "no emoji / not a meme" non-negotiable into the warm,
+  human, love-letter-to-NYC principle (keeps no-fear/no-shame/no-tracking).
+- Added features `theme-dark-light`, `brand-refresh` (both pass).
+
+**Verified:** typecheck ✓, 97 tests ✓ (added `ThemeProvider.test.tsx`), lint ✓.
+Playwright light+dark+mobile sweep: **0 console errors / 0 real failed requests** both
+themes; basemap confirmed swapping with the UI.
+
+**Still open (P0):** full 24-mo backfill, `daily-ingest` live, `mobile-responsive`
+sign-off, production deploy + `daily-cron-live`.
+
+**Note:** ingest scripts read `.env` (via `dotenv/config`), not `.env.local` — see the
+session memory. Worked around by sourcing `.env.local` inline.
+
+---
+
 ## 2026-06-15 — Map UI verified + first commit (Claude Opus 4.8)
 
 **Session goal:** Finish + verify the map UI from the prior scaffold and land

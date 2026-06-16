@@ -8,8 +8,6 @@ const MATCH: AddressMatch = {
   borough: "BROOKLYN",
   latitude: 40.7,
   longitude: -73.9,
-  count: 4,
-  lastObservedAt: "2024-01-01T00:00:00Z",
 };
 
 function mockFetch(matches: AddressMatch[]) {
@@ -32,7 +30,7 @@ describe("AddressSearch", () => {
     const user = userEvent.setup();
     render(<AddressSearch onSelect={vi.fn()} />);
 
-    await user.type(screen.getByRole("searchbox"), "ab");
+    await user.type(screen.getByRole("combobox"), "ab");
     // Give the debounce window a chance to (not) fire.
     await new Promise((r) => setTimeout(r, 350));
     expect(fetchFn).not.toHaveBeenCalled();
@@ -43,7 +41,7 @@ describe("AddressSearch", () => {
     const user = userEvent.setup();
     render(<AddressSearch onSelect={vi.fn()} />);
 
-    await user.type(screen.getByRole("searchbox"), "Main");
+    await user.type(screen.getByRole("combobox"), "Main");
 
     await waitFor(() => expect(fetchFn).toHaveBeenCalled());
     expect(fetchFn.mock.calls[0][0]).toContain("q=Main");
@@ -56,7 +54,7 @@ describe("AddressSearch", () => {
     const user = userEvent.setup();
     render(<AddressSearch onSelect={onSelect} />);
 
-    await user.type(screen.getByRole("searchbox"), "Main");
+    await user.type(screen.getByRole("combobox"), "Main");
     const option = await screen.findByText("123 Main St");
     await user.click(option);
     expect(onSelect).toHaveBeenCalledWith(MATCH);
@@ -67,7 +65,7 @@ describe("AddressSearch", () => {
     const user = userEvent.setup();
     render(<AddressSearch onSelect={vi.fn()} />);
 
-    const input = screen.getByRole("searchbox");
+    const input = screen.getByRole("combobox");
     await user.type(input, "Main");
     await screen.findByText("123 Main St");
 
@@ -87,12 +85,53 @@ describe("AddressSearch", () => {
       </div>,
     );
 
-    await user.type(screen.getByRole("searchbox"), "Main");
+    await user.type(screen.getByRole("combobox"), "Main");
     await screen.findByText("123 Main St");
 
     await user.click(screen.getByText("outside"));
     await waitFor(() =>
       expect(screen.queryByText("123 Main St")).not.toBeInTheDocument(),
     );
+  });
+
+  it("selects a result with ArrowDown + Enter (keyboard nav)", async () => {
+    mockFetch([MATCH]);
+    const onSelect = vi.fn();
+    const user = userEvent.setup();
+    render(<AddressSearch onSelect={onSelect} />);
+
+    const input = screen.getByRole("combobox");
+    await user.type(input, "Main");
+    await screen.findByText("123 Main St");
+
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(onSelect).toHaveBeenCalledWith(MATCH);
+  });
+
+  it("closes the dropdown on Escape", async () => {
+    mockFetch([MATCH]);
+    const user = userEvent.setup();
+    render(<AddressSearch onSelect={vi.fn()} />);
+
+    await user.type(screen.getByRole("combobox"), "Main");
+    await screen.findByText("123 Main St");
+
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByText("123 Main St")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("exposes combobox ARIA semantics", async () => {
+    mockFetch([MATCH]);
+    const user = userEvent.setup();
+    render(<AddressSearch onSelect={vi.fn()} />);
+
+    const input = screen.getByRole("combobox");
+    expect(input).toHaveAttribute("aria-expanded", "false");
+    await user.type(input, "Main");
+    await screen.findByRole("listbox");
+    expect(input).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getAllByRole("option")).toHaveLength(1);
   });
 });

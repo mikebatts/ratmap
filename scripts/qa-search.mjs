@@ -1,0 +1,24 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 2 });
+const errs = [];
+p.on("pageerror", (e) => errs.push("PAGEERR " + e.message));
+p.on("console", (m) => m.type() === "error" && errs.push(m.text()));
+await p.goto("http://localhost:3000/", { waitUntil: "networkidle", timeout: 30000 });
+await p.waitForTimeout(3500);
+
+const search = p.getByPlaceholder(/Search an address/i);
+await search.click();
+await search.fill("20 W 34th St");
+await p.waitForTimeout(1300);
+const results = await p.locator("ul[role=listbox] li button").count();
+const firstText = results ? (await p.locator("ul[role=listbox] li button").first().innerText()).replace(/\s+/g," ").trim() : "(none)";
+await p.locator("ul[role=listbox] li button").first().click();
+await p.waitForTimeout(3500);
+const dialog = (await p.getByRole("dialog").count()) > 0;
+const panelText = dialog ? (await p.getByRole("dialog").innerText()).replace(/\s+/g," ").trim().slice(0,80) : "(no panel)";
+await p.screenshot({ path: "scripts/search-result.png" });
+console.log("results:", results, "| first:", firstText);
+console.log("detail panel:", panelText);
+console.log("errors:", errs.length ? errs.join(" | ") : "(none)");
+await b.close();

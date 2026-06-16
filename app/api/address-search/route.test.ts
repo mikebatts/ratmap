@@ -1,103 +1,97 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-
-const getServerClient = vi.fn();
-vi.mock("@/lib/supabase", () => ({
-  getServerClient: () => getServerClient(),
-}));
-
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { GET } from "./route";
 
 function req(q: string): Request {
   return new Request(`http://localhost/api/address-search?q=${encodeURIComponent(q)}`);
 }
 
-// Build a Supabase query-builder mock whose terminal .limit() resolves to result.
-function clientReturning(result: { data: unknown; error: unknown }) {
-  const limit = vi.fn().mockResolvedValue(result);
-  const order = vi.fn().mockReturnValue({ limit });
-  const ilike = vi.fn().mockReturnValue({ order });
-  const select = vi.fn().mockReturnValue({ ilike });
-  const from = vi.fn().mockReturnValue({ select });
-  return { client: { from }, ilike };
+function mockGeoSearch(features: unknown[], ok = true) {
+  const fn = vi.fn().mockResolvedValue({
+    ok,
+    json: async () => ({ features }),
+  });
+  vi.stubGlobal("fetch", fn);
+  return fn;
 }
 
-describe("GET /api/address-search", () => {
-  beforeEach(() => getServerClient.mockReset());
+const FEATURE = {
+  geometry: { coordinates: [-73.9856, 40.7484] },
+  properties: {
+    name: "350 5 AVENUE",
+    housenumber: "350",
+    street: "5 AVENUE",
+    label: "350 5 AVENUE, New York, NY, USA",
+    borough: "Manhattan",
+  },
+};
 
-  it("returns empty for queries shorter than 3 chars without hitting the DB", async () => {
-    getServerClient.mockReturnValue(clientReturning({ data: [], error: null }).client);
+describe("GET /api/address-search (NYC GeoSearch proxy)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("returns empty for queries shorter than 3 chars without calling the geocoder", async () => {
+    const fetchFn = mockGeoSearch([FEATURE]);
     const res = await GET(req("ab"));
     const body = await res.json();
     expect(body).toEqual({ query: "ab", matches: [] });
+    expect(fetchFn).not.toHaveBeenCalled();
   });
 
-  it("returns empty when Supabase is unconfigured", async () => {
-    getServerClient.mockReturnValue(null);
-    const res = await GET(req("main street"));
+  it("maps GeoSearch features to matches", async () => {
+    const fetchFn = mockGeoSearch([FEATURE]);
+    const res = await GET(req("350 5th ave"));
     const body = await res.json();
-    expect(body.matches).toEqual([]);
-  });
 
-  it("groups rows by address with counts and most-recent date", async () => {
-    const { client, ilike } = clientReturning({
-      data: [
-        {
-          address: "123 Main St",
-          borough: "BROOKLYN",
-          latitude: 40.7,
-          longitude: -73.9,
-          observed_at: "2024-01-01T00:00:00Z",
-        },
-        {
-          address: "123 Main St",
-          borough: "BROOKLYN",
-          latitude: 40.7,
-          longitude: -73.9,
-          observed_at: "2024-03-01T00:00:00Z",
-        },
-        {
-          address: "999 Side Ave",
-          borough: "QUEENS",
-          latitude: 40.8,
-          longitude: -73.8,
-          observed_at: "2024-02-01T00:00:00Z",
-        },
-      ],
-      error: null,
+    expect(fetchFn).toHaveBeenCalled();
+    expect(fetchFn.mock.calls[0][0]).toContain("geosearch.planninglabs.nyc");
+    expect(body.matches).toHaveLength(1);
+    expect(body.matches[0]).toEqual({
+      address: "350 5th Avenue", // formatted: title-case + ordinal
+      borough: "Manhattan",
+      latitude: 40.7484,
+      longitude: -73.9856,
     });
-    getServerClient.mockReturnValue(client);
-
-    const res = await GET(req("Main"));
-    const body = await res.json();
-
-    // ILIKE needle is lower-cased.
-    expect(ilike).toHaveBeenCalledWith("address", "%main%");
-
-    expect(body.matches).toHaveLength(2);
-    const top = body.matches[0]; // sorted by count desc
-    expect(top.address).toBe("123 Main St");
-    expect(top.count).toBe(2);
-    expect(top.lastObservedAt).toBe("2024-03-01T00:00:00Z");
   });
 
-  it("returns empty on DB error", async () => {
-    getServerClient.mockReturnValue(
-      clientReturning({ data: null, error: { message: "boom" } }).client,
-    );
-    const res = await GET(req("Main"));
+  it("falls back to the label's first segment when name is absent", async () => {
+    mockGeoSearch([
+      { geometry: { coordinates: [-73.9, 40.7] }, properties: { label: "123 Main St, Brooklyn, NY, USA", borough: "Brooklyn" } },
+    ]);
+    const res = await GET(req("123 Main"));
     const body = await res.json();
-    expect(body.matches).toEqual([]);
+    expect(body.matches[0].address).toBe("123 Main St");
   });
 
-  it("skips rows with no address", async () => {
-    getServerClient.mockReturnValue(
-      clientReturning({
-        data: [{ address: null, borough: null, latitude: 0, longitude: 0, observed_at: "x" }],
-        error: null,
-      }).client,
-    );
-    const res = await GET(req("Main"));
+  it("skips features without valid coordinates", async () => {
+    mockGeoSearch([
+      { geometry: {}, properties: { name: "No Coords" } },
+      FEATURE,
+    ]);
+    const res = await GET(req("anything"));
+    const body = await res.json();
+    expect(body.matches).toHaveLength(1);
+    expect(body.matches[0].address).toBe("350 5th Avenue");
+  });
+
+  it("flags an error on a non-OK geocoder response", async () => {
+    mockGeoSearch([], false);
+    const res = await GET(req("whatever"));
     const body = await res.json();
     expect(body.matches).toEqual([]);
+    expect(body.error).toBe(true);
+  });
+
+  it("flags an error when the geocoder throws", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
+    const res = await GET(req("whatever"));
+    const body = await res.json();
+    expect(body.matches).toEqual([]);
+    expect(body.error).toBe(true);
+  });
+
+  it("dedupes identical address + borough pairs", async () => {
+    mockGeoSearch([FEATURE, FEATURE]);
+    const res = await GET(req("350 5th"));
+    const body = await res.json();
+    expect(body.matches).toHaveLength(1);
   });
 });

@@ -41,18 +41,20 @@ export function buildPopupHTML(f: ObservationFeature): string {
   const addr = p.address ? esc(p.address) : "Address not recorded";
   const boro = p.borough ? ` · ${esc(p.borough)}` : "";
 
+  // Colors come from CSS vars (defined in globals.css) so the popup themes
+  // automatically with light/dark. Category swatch keeps its semantic hex.
   return `
-    <div style="padding:14px 16px;max-width:280px;font-size:13px;line-height:1.45;color:#1a1a1a;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${meta.color};"></span>
-        <strong style="font-size:14px;">${esc(meta.label)}</strong>
+    <div style="padding:16px 18px;max-width:284px;font-size:13px;line-height:1.45;color:rgb(var(--content));overflow-wrap:anywhere;">
+      <div style="display:inline-flex;align-items:center;gap:7px;padding:4px 10px 4px 8px;margin-bottom:10px;border-radius:999px;background:${meta.color}1f;border:1px solid ${meta.color}55;">
+        <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${meta.color};box-shadow:0 0 8px ${meta.color}cc;"></span>
+        <strong style="font-size:12.5px;letter-spacing:0.01em;">${esc(meta.label)}</strong>
       </div>
-      <div style="color:#444;margin-bottom:8px;">${esc(meta.description)}</div>
-      <div style="font-weight:600;">${addr}${boro}</div>
-      <div style="color:#666;margin-bottom:8px;">${formatDate(p.observed_at)}</div>
+      <div style="color:rgb(var(--content-muted));margin-bottom:12px;">${esc(meta.description)}</div>
+      <div style="font-weight:600;font-size:14px;">${addr}</div>
+      <div style="color:rgb(var(--content-muted));font-size:12px;margin-bottom:2px;">${boro ? esc(p.borough ?? "") + " · " : ""}${formatDate(p.observed_at)}</div>
       ${
         p.detail
-          ? `<div style="color:#666;font-style:italic;margin-bottom:8px;">"${esc(
+          ? `<div style="color:rgb(var(--content-muted));font-style:italic;margin-top:8px;">"${esc(
               p.detail,
             )}"</div>`
           : ""
@@ -60,7 +62,7 @@ export function buildPopupHTML(f: ObservationFeature): string {
       ${
         src
           ? `<a href="${src.href}" target="_blank" rel="noopener noreferrer"
-               style="color:#1971C2;text-decoration:underline;font-size:12px;">
+               style="display:inline-block;margin-top:12px;color:rgb(var(--content));text-decoration:none;font-size:12px;font-weight:600;border-bottom:2px solid rgb(var(--accent));padding-bottom:1px;">
                View source: ${esc(src.label)} ↗
              </a>`
           : ""

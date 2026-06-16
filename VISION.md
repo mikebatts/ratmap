@@ -30,7 +30,11 @@ ops. Open source. No accounts. No tracking. No ads. No monetization (v1).
 - **No fear-mongering** in copy. The voice is NYC-direct, not "shock value."
 - **No shame.** Rats are part of the city. Residents aren't to blame.
 - **100% open source.** Repo public from day 1.
-- No emoji in the UI. No cartoon rats. The product is a *tool*, not a meme.
+- **Warm, human, unmistakably NYC.** This is a love letter to the city — by a
+  New Yorker, for New Yorkers. The mark is friendly (the 🐭 wordmark), the craft
+  bar is high (liquid-glass UI, dark + light themes, the map as the foundation).
+  It has heart — but never at the expense of the rules above: no fear-mongering,
+  no shame, no tracking, no ads.
 
 ## Stop condition
 

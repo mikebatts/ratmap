@@ -47,17 +47,10 @@ export default async function Image() {
           fontFamily: font ? "Space Grotesk" : "sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 9999,
-              backgroundColor: HOTDOG,
-            }}
-          />
+        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+          <div style={{ fontSize: 80, lineHeight: 1 }}>🐭</div>
           <div style={{ fontSize: 88, fontWeight: 700, color: HOTDOG, lineHeight: 1 }}>
-            {SITE_NAME}
+            {SITE_NAME.toUpperCase()}
           </div>
         </div>
 

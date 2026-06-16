@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerClient } from "@/lib/supabase";
-import type { RatObservation } from "@/lib/types";
+import { formatAddress } from "@/lib/address";
 
 export const dynamic = "force-dynamic";
 
@@ -9,20 +8,36 @@ interface AddressMatch {
   borough: string | null;
   latitude: number;
   longitude: number;
-  count: number;
-  lastObservedAt: string;
 }
 
 interface SearchResponse {
   query: string;
   matches: AddressMatch[];
+  /** True when the geocoder failed (vs. a genuine no-results) — lets the UI
+   *  show a "try again" message instead of "no matches". */
+  error?: boolean;
+}
+
+// NYC Planning Labs GeoSearch (Pelias) — free, no API key, NYC-scoped address
+// autocomplete. https://geosearch.planninglabs.nyc/docs/
+const GEOSEARCH_URL = "https://geosearch.planninglabs.nyc/v2/autocomplete";
+
+interface GeoFeature {
+  geometry?: { coordinates?: [number, number] };
+  properties?: {
+    label?: string;
+    name?: string;
+    housenumber?: string;
+    street?: string;
+    borough?: string;
+  };
 }
 
 /**
- * GET /api/address-search?q=123+Main+St
- * Returns distinct matching addresses (v1: simple ILIKE text match) with a
- * representative coordinate, observation count, and most recent date.
- * Always returns 200 — never throws on missing backend.
+ * GET /api/address-search?q=350+5th+ave
+ * Proxies NYC GeoSearch autocomplete so any NYC address resolves (not just ones
+ * that already have a rat report). Returns matches with a representative point.
+ * Always returns 200 — never throws on a geocoder hiccup.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -31,54 +46,51 @@ export async function GET(request: Request) {
   const empty: SearchResponse = { query: q, matches: [] };
   if (q.length < 3) return NextResponse.json(empty);
 
-  const db = getServerClient();
-  if (!db) return NextResponse.json(empty);
-
-  // Normalize: lowercase. The trigram index is on lower(address).
-  const needle = q.toLowerCase();
+  // Don't let a slow geocoder hang the request.
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 4000);
 
   try {
-    const { data, error } = await db
-      .from("rat_observations")
-      .select("address,borough,latitude,longitude,observed_at")
-      .ilike("address", `%${needle}%`)
-      .order("observed_at", { ascending: false })
-      .limit(500);
+    const url = `${GEOSEARCH_URL}?text=${encodeURIComponent(q)}&size=6`;
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return NextResponse.json({ ...empty, error: true });
 
-    if (error || !data) return NextResponse.json(empty);
-
-    // Group by normalized address → representative point + count.
-    const byAddress = new Map<string, AddressMatch>();
-    for (const row of data as Pick<
-      RatObservation,
-      "address" | "borough" | "latitude" | "longitude" | "observed_at"
-    >[]) {
-      if (!row.address) continue;
-      const key = row.address.toLowerCase();
-      const existing = byAddress.get(key);
-      if (existing) {
-        existing.count += 1;
-        if (row.observed_at > existing.lastObservedAt) {
-          existing.lastObservedAt = row.observed_at;
-        }
-      } else {
-        byAddress.set(key, {
-          address: row.address,
-          borough: row.borough,
-          latitude: row.latitude,
-          longitude: row.longitude,
-          count: 1,
-          lastObservedAt: row.observed_at,
-        });
-      }
+    const data = (await res.json()) as { features?: GeoFeature[] };
+    const matches: AddressMatch[] = [];
+    const seen = new Set<string>();
+    for (const f of data.features ?? []) {
+      const coords = f.geometry?.coordinates;
+      if (!coords || coords.length !== 2) continue;
+      const [longitude, latitude] = coords;
+      if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) continue;
+      const p = f.properties ?? {};
+      // Format ALL CAPS + ordinal-less GeoSearch output into a clean line.
+      const address = formatAddress({
+        housenumber: p.housenumber,
+        street: p.street,
+        name: p.name ?? p.label?.split(",")[0],
+      });
+      if (!address) continue;
+      // Drop duplicate address+borough pairs.
+      const key = `${address}|${p.borough ?? ""}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      matches.push({
+        address,
+        borough: p.borough ?? null,
+        latitude,
+        longitude,
+      });
     }
-
-    const matches = Array.from(byAddress.values())
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 25);
 
     return NextResponse.json({ query: q, matches });
   } catch {
-    return NextResponse.json(empty);
+    // Geocoder timed out / network error — flag it so the UI can offer a retry.
+    return NextResponse.json({ ...empty, error: true });
+  } finally {
+    clearTimeout(timer);
   }
 }

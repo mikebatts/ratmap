@@ -13,7 +13,7 @@
       "id": "data-model",
       "priority": "P0",
       "description": "Supabase migration 0001_init.sql with rat_observations + ingest_state + PostGIS indexes",
-      "passes": false
+      "passes": true
     },
     {
       "id": "socrata-client",
@@ -25,13 +25,13 @@
       "id": "ingest-311",
       "priority": "P0",
       "description": "24-month backfill script for 311 rodent complaints (erm2-nwe9)",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ingest-rodent",
       "priority": "P0",
       "description": "24-month backfill script for DOH rodent inspections (p937-wjvj)",
-      "passes": false
+      "passes": true
     },
     {
       "id": "daily-ingest",
@@ -43,61 +43,61 @@
       "id": "api-observations",
       "priority": "P0",
       "description": "GET /api/observations?bbox=&since=&categories= returns GeoJSON in viewport",
-      "passes": false
+      "passes": true
     },
     {
       "id": "api-address-search",
       "priority": "P0",
       "description": "GET /api/address-search?q= returns matching addresses + nearby observations",
-      "passes": false
+      "passes": true
     },
     {
       "id": "api-stats",
       "priority": "P0",
       "description": "GET /api/stats returns total counts for the header",
-      "passes": false
+      "passes": true
     },
     {
       "id": "map",
       "priority": "P0",
       "description": "Full-bleed MapLibre map centered on NYC, color-coded pins, clustering at low zoom",
-      "passes": false
+      "passes": true
     },
     {
       "id": "pin-popup",
       "priority": "P0",
       "description": "Click a pin → popup with date, category, source, address, source link",
-      "passes": false
+      "passes": true
     },
     {
       "id": "address-search-ui",
       "priority": "P0",
       "description": "Debounced top search bar → fly to address + highlight nearby observations",
-      "passes": false
+      "passes": true
     },
     {
       "id": "filter-time",
       "priority": "P0",
       "description": "Time-range filter (30d / 90d / 1y / 2y / all)",
-      "passes": false
+      "passes": true
     },
     {
       "id": "filter-category",
       "priority": "P0",
       "description": "Category filter checkboxes",
-      "passes": false
+      "passes": true
     },
     {
       "id": "filter-borough",
       "priority": "P0",
       "description": "Borough filter checkboxes",
-      "passes": false
+      "passes": true
     },
     {
       "id": "about-page",
       "priority": "P0",
       "description": "Minimal about page — @mikebatts_ X link, data attribution, source code link",
-      "passes": false
+      "passes": true
     },
     {
       "id": "mobile-responsive",
@@ -109,7 +109,7 @@
       "id": "open-source",
       "priority": "P0",
       "description": "Public repo with README, LICENSE (MIT), VISION.md, features.json, progress.md",
-      "passes": false
+      "passes": true
     },
     {
       "id": "backfill-24mo",
@@ -127,13 +127,25 @@
       "id": "address-detail-panel",
       "priority": "P1",
       "description": "Right slide-out panel: activity summary + chronological list for an address",
-      "passes": false
+      "passes": true
     },
     {
       "id": "report-a-rat",
       "priority": "P1",
       "description": "\"Report a rat here\" link → official 311 form in new tab",
-      "passes": false
+      "passes": true
+    },
+    {
+      "id": "theme-dark-light",
+      "priority": "P1",
+      "description": "Dark + light theme: follows OS, manual glass toggle persisted to localStorage, map basemap swaps (positron ↔ dark)",
+      "passes": true
+    },
+    {
+      "id": "brand-refresh",
+      "priority": "P1",
+      "description": "🐭 RATMAP.NYC wordmark + favicon + OG; iOS liquid-glass overlay system over a full-bleed map",
+      "passes": true
     }
   ]
 }

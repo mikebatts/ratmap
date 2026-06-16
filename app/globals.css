@@ -2,9 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------------------
+   Semantic design tokens. Channel triplets (no rgb()) so Tailwind + the glass
+   utilities can compose alpha via rgb(var(--token) / <alpha>). Light is the
+   default; .dark (toggled on <html>) overrides. Accent stays constant.
+--------------------------------------------------------------------------- */
 :root {
-  --background: #faf7f0; /* cream */
-  --foreground: #1a1a1a; /* ink */
+  --bg: 250 247 240; /* warm cream */
+  --glass: 255 255 255; /* glass material base */
+  --glass-edge: 255 255 255; /* specular highlight */
+  --glass-a: 0.3; /* glass tint opacity — kept low so the map refracts through */
+  --glass-strong-a: 0.66; /* content panels: more opaque for text legibility */
+  --content: 26 26 26; /* ink */
+  --content-muted: 90 92 100;
+  --border: 0 0 0; /* used at low alpha for hairlines */
+  --border-alpha: 0.1;
+  --accent: 245 197 24; /* hotdog yellow */
+  --accent-contrast: 26 26 26; /* text on accent */
+  --ring: 245 197 24;
+  --shadow-strength: 0.14;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: 11 12 15; /* near-black NYC night */
+  --glass: 30 33 42; /* cool slate so the glass reads against the night map */
+  --glass-edge: 255 255 255;
+  --glass-a: 0.42;
+  --glass-strong-a: 0.72;
+  --content: 237 238 242;
+  --content-muted: 150 154 165;
+  --border: 255 255 255;
+  --border-alpha: 0.14;
+  --accent: 245 197 24;
+  --accent-contrast: 17 18 22;
+  --ring: 245 197 24;
+  --shadow-strength: 0.4;
+  color-scheme: dark;
 }
 
 html,
@@ -14,8 +48,8 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: rgb(var(--content));
+  background: rgb(var(--bg));
   font-family: var(--font-inter), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -24,16 +58,320 @@ body {
   box-sizing: border-box;
 }
 
-/* MapLibre popup styling to match the brand. */
+/* Global accessibility safety net: honor reduced-motion app-wide (covers inline
+   Tailwind transitions/active-scale, not just the named .animate-* classes). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Respect iPhone notch / home-indicator safe areas on the floating overlays. */
+.safe-t {
+  padding-top: max(env(safe-area-inset-top), 0px);
+}
+.safe-b {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+.safe-x {
+  padding-left: max(env(safe-area-inset-left), 0px);
+  padding-right: max(env(safe-area-inset-right), 0px);
+}
+
+/* MapLibre's own controls/attribution should also clear the home indicator. */
+.maplibregl-ctrl-bottom-right,
+.maplibregl-ctrl-bottom-left {
+  margin-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
+@layer components {
+  /* ===========================================================================
+     LIQUID GLASS — modeled on Apple's iOS 26 material.
+
+     The look that sells "glass" is NOT heavy frost. It is:
+       • a CLEAR, lightly-tinted pane (low opacity) so colour shows through,
+       • SATURATION + brightness lift of whatever is behind it,
+       • a BRIGHT specular rim (top + bottom edge catch-light), and
+       • EDGE REFRACTION that bends the backdrop (the "liquid" part).
+
+     Refraction (`url(#liquid-glass)`) only renders in Chromium, so the base
+     rule below is the everywhere-fallback (clear glass + specular, no lensing)
+     and `.glass-refract …` adds the displacement where it's supported. No
+     pseudo-elements, so these classes work on <input> too.
+  =========================================================================== */
+  .glass {
+    background-color: rgb(var(--glass) / var(--glass-a));
+    /* one faint top sheen — light grazing the curved top edge, kept subtle so
+       it reads as light, not a gradient fill */
+    background-image: linear-gradient(
+      180deg,
+      rgb(var(--glass-edge) / 0.18) 0%,
+      rgb(var(--glass-edge) / 0) 24%
+    );
+    backdrop-filter: blur(16px) saturate(190%) brightness(1.06);
+    -webkit-backdrop-filter: blur(16px) saturate(190%) brightness(1.06);
+    border: 1px solid rgb(var(--border) / calc(var(--border-alpha) + 0.04));
+    border-radius: 1.5rem;
+    box-shadow:
+      /* bright top edge — the primary glass catch-light */
+      inset 0 1px 0.5px 0 rgb(var(--glass-edge) / 0.85),
+      /* faint full inner rim */
+      inset 0 0 0 1px rgb(var(--glass-edge) / 0.08),
+      /* lower edge light — glass catches light top AND bottom */
+      inset 0 -1px 1px 0 rgb(var(--glass-edge) / 0.22),
+      /* depth: float the pane off the map */
+      0 1px 1px rgb(0 0 0 / 0.04),
+      0 10px 28px -8px rgb(0 0 0 / calc(var(--shadow-strength) + 0.04)),
+      0 24px 56px -22px rgb(0 0 0 / var(--shadow-strength));
+  }
+
+  /* Content-heavy surfaces (detail panel, about, dropdowns): more opaque so
+     text stays crisp, same specular language. */
+  .glass-strong {
+    background-color: rgb(var(--glass) / var(--glass-strong-a));
+    background-image: linear-gradient(
+      180deg,
+      rgb(var(--glass-edge) / 0.14) 0%,
+      rgb(var(--glass-edge) / 0) 20%
+    );
+    backdrop-filter: blur(28px) saturate(190%) brightness(1.04);
+    -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.04);
+    border: 1px solid rgb(var(--border) / calc(var(--border-alpha) + 0.04));
+    box-shadow:
+      inset 0 1px 0.5px 0 rgb(var(--glass-edge) / 0.7),
+      inset 0 0 0 1px rgb(var(--glass-edge) / 0.06),
+      inset 0 -1px 1px 0 rgb(var(--glass-edge) / 0.16),
+      0 18px 44px -14px rgb(0 0 0 / calc(var(--shadow-strength) + 0.08)),
+      0 40px 80px -32px rgb(0 0 0 / var(--shadow-strength));
+  }
+
+  /* Hairline divider that respects the theme. */
+  .hairline {
+    border-color: rgb(var(--border) / var(--border-alpha));
+  }
+
+  /* ---------------------------------------------------------------------------
+     Interactive glass — shared press/hover physics for every glass control.
+     Hover lifts + brightens the specular; press settles it back down. Classy,
+     subtle, consistent across the whole UI.
+  --------------------------------------------------------------------------- */
+  .glass-interactive {
+    transition:
+      transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.28s ease,
+      background-color 0.28s ease,
+      filter 0.28s ease;
+    will-change: transform;
+  }
+  .glass-interactive:hover {
+    filter: brightness(1.07);
+    background-color: rgb(var(--glass) / calc(var(--glass-a) + 0.16));
+    transform: translateY(-1px);
+  }
+  .glass-interactive:active {
+    transform: translateY(0) scale(0.96);
+    filter: brightness(0.98);
+    transition-duration: 0.08s;
+  }
+  .glass-interactive:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 1px 0.5px 0 rgb(var(--glass-edge) / 0.85),
+      0 0 0 2px rgb(var(--bg) / 0.9),
+      0 0 0 4px rgb(var(--ring) / 0.9);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Motion — subtle, classy entrances. All gated behind prefers-reduced-motion.
+--------------------------------------------------------------------------- */
+@keyframes rm-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes rm-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes rm-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes rm-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes rm-pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.animate-fade-in {
+  animation: rm-fade-in 0.3s ease both;
+}
+.animate-pop-in {
+  animation: rm-pop-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transform-origin: top right;
+}
+.animate-slide-in-right {
+  animation: rm-slide-in-right 0.34s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.animate-rise-in {
+  animation: rm-rise-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.animate-pulse-soft {
+  animation: rm-pulse-soft 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-pop-in,
+  .animate-slide-in-right,
+  .animate-rise-in,
+  .animate-pulse-soft {
+    animation: none;
+  }
+  .glass-interactive,
+  .glass-interactive:hover,
+  .glass-interactive:active {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Chromium only: add the SVG displacement refraction and dial the blur DOWN so
+   the lensing of the map behind is actually visible (clear glass, not frost). */
+.glass-refract .glass {
+  backdrop-filter: blur(5px) saturate(190%) brightness(1.08) url(#liquid-glass);
+}
+.glass-refract .glass-strong {
+  backdrop-filter: blur(12px) saturate(185%) brightness(1.05) url(#liquid-glass);
+}
+
+/* Graceful fallback where backdrop-filter is unsupported entirely. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background-color: rgb(var(--glass) / 0.92);
+  }
+  .glass-strong {
+    background-color: rgb(var(--glass) / 0.96);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   MapLibre popup — themed glass to match the overlay system.
+--------------------------------------------------------------------------- */
 .maplibregl-popup-content {
-  border-radius: 10px;
+  border-radius: 18px;
   padding: 0;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  background-color: rgb(var(--glass) / 0.82);
+  background-image: linear-gradient(
+    180deg,
+    rgb(var(--glass-edge) / 0.16) 0%,
+    rgb(var(--glass-edge) / 0) 22%
+  );
+  backdrop-filter: blur(24px) saturate(190%) brightness(1.05);
+  -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(1.05);
+  border: 1px solid rgb(var(--border) / calc(var(--border-alpha) + 0.04));
+  box-shadow:
+    inset 0 1px 0.5px 0 rgb(var(--glass-edge) / 0.7),
+    inset 0 -1px 1px 0 rgb(var(--glass-edge) / 0.16),
+    0 18px 50px -16px rgb(0 0 0 / calc(var(--shadow-strength) + 0.08));
+  color: rgb(var(--content));
   font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+.glass-refract .maplibregl-popup-content {
+  backdrop-filter: blur(10px) saturate(190%) brightness(1.06) url(#liquid-glass);
+}
+
+/* Popup entrance — a gentle rise + fade so reports feel like they surface.
+   IMPORTANT: MapLibre positions the popup with an inline `transform` on
+   `.maplibregl-popup`, so we must NOT animate transform on that element (it
+   would override positioning and snap the popup to 0,0). Animate the inner
+   content + fade the container's opacity only. */
+.rm-popup {
+  animation: rm-fade-in 0.18s ease both;
+}
+.rm-popup .maplibregl-popup-content {
+  animation: rm-rise-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rm-popup,
+  .rm-popup .maplibregl-popup-content {
+    animation: none;
+  }
+}
+
+/* Themed popup tip (the little arrow). */
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: rgb(var(--glass) / 0.92);
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: rgb(var(--glass) / 0.92);
+}
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: rgb(var(--glass) / 0.92);
+}
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: rgb(var(--glass) / 0.92);
 }
 
 .maplibregl-popup-close-button {
   font-size: 18px;
-  padding: 2px 8px;
-  color: #555;
+  padding: 4px 10px;
+  color: rgb(var(--content-muted));
+  border-radius: 0 16px 0 12px;
+}
+.maplibregl-popup-close-button:hover {
+  background: rgb(var(--content) / 0.06);
+  color: rgb(var(--content));
+}
+
+/* Themed scrollbars for overlay panels. */
+.themed-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--content) / 0.2) transparent;
+}
+.themed-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.themed-scroll::-webkit-scrollbar-thumb {
+  background: rgb(var(--content) / 0.2);
+  border-radius: 8px;
+}
+.themed-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }

@@ -9,8 +9,6 @@ const MATCH: AddressMatch = {
   borough: "BROOKLYN",
   latitude: 40.7,
   longitude: -73.9,
-  count: 3,
-  lastObservedAt: "2024-03-01T00:00:00Z",
 };
 
 function feat(id: number, observed_at: string, detail: string | null = null): ObservationFeature {
@@ -42,22 +40,33 @@ describe("AddressDetail", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("shows the address, borough, and report count", async () => {
+  it("shows the address, borough, and a count derived from nearby reports", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ json: async () => ({ features: [] }) }),
+      vi.fn().mockResolvedValue({
+        json: async () => ({
+          features: [
+            feat(1, "2024-01-01T12:00:00Z"),
+            feat(2, "2024-02-01T12:00:00Z"),
+            feat(3, "2024-03-01T12:00:00Z"),
+          ],
+        }),
+      }),
     );
     render(<AddressDetail match={MATCH} onClose={vi.fn()} />);
     expect(screen.getByText("123 Main St")).toBeInTheDocument();
     expect(screen.getByText("brooklyn")).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
+    // Count comes from the fetched features (3), not the search result.
+    expect(await screen.findByText("3 reports nearby")).toBeInTheDocument();
   });
 
   it("shows the loading state while fetching", async () => {
     // A fetch that never resolves keeps the component in its loading state.
     vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => {})));
     render(<AddressDetail match={MATCH} onClose={vi.fn()} />);
-    expect(await screen.findByText("Loading…")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Looking up nearby reports…"),
+    ).toBeInTheDocument();
   });
 
   it("renders a timeline sorted newest-first", async () => {
@@ -91,7 +100,7 @@ describe("AddressDetail", () => {
     );
     render(<AddressDetail match={MATCH} onClose={vi.fn()} />);
     expect(
-      await screen.findByText("No nearby observations found."),
+      await screen.findByText("No rat reports recorded within a block of here."),
     ).toBeInTheDocument();
   });
 });
