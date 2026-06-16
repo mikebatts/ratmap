@@ -114,7 +114,7 @@ export default function AddressDetail({ match, onClose }: AddressDetailProps) {
       />
 
       {/* Header — sticky (doesn't scroll), Apple-Maps "place card" style */}
-      <div className="safe-t relative shrink-0 px-5 pb-4 pt-4 sm:pt-5">
+      <div className="relative shrink-0 px-5 pb-4 pt-4 sm:pt-5">
         <button
           ref={closeRef}
           type="button"
@@ -209,7 +209,7 @@ export default function AddressDetail({ match, onClose }: AddressDetailProps) {
       </div>
 
       {/* Scrollable activity */}
-      <div className="safe-b themed-scroll flex-1 overflow-auto px-5 pb-4 pt-3">
+      <div className="themed-scroll flex-1 overflow-auto px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-content-muted">
           Recent activity
         </h3>

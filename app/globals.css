@@ -89,16 +89,19 @@ select {
   }
 }
 
-/* Respect iPhone notch / home-indicator safe areas on the floating overlays. */
+/* Respect iPhone notch / home-indicator safe areas on the floating overlays.
+   These rules come after @tailwind utilities, so they win over p-*; the 0.75rem
+   floor keeps a normal gap on every device (env() is 0 in desktop browsers) and
+   expands to clear the notch / home indicator on iOS. */
 .safe-t {
-  padding-top: max(env(safe-area-inset-top), 0px);
+  padding-top: max(env(safe-area-inset-top), 0.75rem);
 }
 .safe-b {
-  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
 }
 .safe-x {
-  padding-left: max(env(safe-area-inset-left), 0px);
-  padding-right: max(env(safe-area-inset-right), 0px);
+  padding-left: max(env(safe-area-inset-left), 0.75rem);
+  padding-right: max(env(safe-area-inset-right), 0.75rem);
 }
 
 /* MapLibre's own controls/attribution should also clear the home indicator. */

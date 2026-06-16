@@ -50,7 +50,7 @@ export default function FilterSheet({
       />
 
       {/* Sheet */}
-      <div className="glass-card animate-sheet-up themed-scroll safe-b safe-x absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-auto rounded-t-[28px] px-5 pb-6 pt-3">
+      <div className="glass-card animate-sheet-up themed-scroll absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-auto rounded-t-[28px] px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div
           aria-hidden="true"
           className="mx-auto mb-3 h-1 w-9 rounded-full bg-content/20"

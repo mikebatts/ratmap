@@ -28,6 +28,13 @@ bottom-sheet, floating right-side controls). Desktop layout unchanged.
 input font 16px, filter bottom sheet works, search opens upward, detail sheet hides
 search bar, 0 console errors (`scripts/m-*.png`).
 
+**Follow-up fix:** the `.safe-*` classes (defined after `@tailwind utilities`, so
+they win the cascade) used `max(env(), 0px)` — which on desktop/narrow browsers
+forced the floating bars' padding to **0** ("zero margins"). Raised the floor to
+`0.75rem` so there's always a gap. Also swapped `safe-b/safe-x` for explicit
+`pb-[max(...,env())]` on the detail + filter sheets so their `px-5` padding isn't
+capped. Verified: narrow-width padding now 12px (`scripts/narrow-*.png`).
+
 ---
 
 ## 2026-06-16 — Production hardening: alerting, health, error handling (Claude Opus 4.8)
