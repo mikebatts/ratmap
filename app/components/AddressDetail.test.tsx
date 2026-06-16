@@ -56,8 +56,9 @@ describe("AddressDetail", () => {
     render(<AddressDetail match={MATCH} onClose={vi.fn()} />);
     expect(screen.getByText("123 Main St")).toBeInTheDocument();
     expect(screen.getByText("brooklyn")).toBeInTheDocument();
-    // Count comes from the fetched features (3), not the search result.
-    expect(await screen.findByText("3 reports nearby")).toBeInTheDocument();
+    // Count comes from the fetched features (3), shown in the stat row.
+    expect(await screen.findByText("Reports nearby")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
   });
 
   it("shows the loading state while fetching", async () => {

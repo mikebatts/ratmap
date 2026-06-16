@@ -37,9 +37,15 @@ export interface FilterState {
 interface FilterPanelProps {
   value: FilterState;
   onChange: (next: FilterState) => void;
+  /** Override the trigger button's classes (e.g. to render as a capsule segment). */
+  triggerClassName?: string;
 }
 
-export default function FilterPanel({ value, onChange }: FilterPanelProps) {
+export default function FilterPanel({
+  value,
+  onChange,
+  triggerClassName,
+}: FilterPanelProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -85,7 +91,10 @@ export default function FilterPanel({ value, onChange }: FilterPanelProps) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="glass glass-interactive flex h-11 items-center gap-2 rounded-2xl px-4 text-sm font-semibold text-content"
+        className={
+          triggerClassName ??
+          "glass glass-interactive flex h-11 items-center gap-2 rounded-2xl px-4 text-sm font-semibold text-content"
+        }
       >
         <span className="inline-block h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_8px_rgb(var(--accent)/0.7)]" />
         <span className="hidden sm:inline">Filters</span>

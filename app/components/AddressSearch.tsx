@@ -115,6 +115,20 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
 
   return (
     <div ref={boxRef} className="relative w-full">
+      {/* Search icon — Apple Maps style */}
+      <svg
+        className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-content-muted"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="11" cy="11" r="7" />
+        <path d="m21 21-4.3-4.3" />
+      </svg>
       <input
         type="search"
         inputMode="search"
@@ -130,7 +144,7 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
         aria-autocomplete="list"
         aria-activedescendant={active >= 0 ? `addr-opt-${active}` : undefined}
         autoComplete="off"
-        className="glass w-full rounded-2xl px-4 py-3 text-sm text-content placeholder:text-content-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        className="glass w-full rounded-full py-3 pl-10 pr-4 text-sm font-medium text-content placeholder:font-normal placeholder:text-content-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 [&:focus]:bg-[rgb(var(--glass)/0.9)]"
       />
       {open && (
         <ul

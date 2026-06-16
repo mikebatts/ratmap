@@ -4,6 +4,73 @@ Durable state log. Append an entry every iteration. Newest at top.
 
 ---
 
+## 2026-06-16 — Contrast/legibility sweep + branding pass (Claude Opus 4.8)
+
+**Dark popup bug:** clicking a dot in dark mode showed a WHITE popup with near-
+white text (invisible). Cause — MapLibre's default `.maplibregl-popup-content
+{ background:#fff }` outranked our themed rule by load order. Fixed with a
+double-class selector (`.maplibregl-popup .maplibregl-popup-content`) + ~0.95
+opacity; tip/close-button selectors bumped to match. Dark popup now legible.
+
+**Contrast / glass legibility (the "too transparent" complaint):**
+- Bumped glass opacity tokens: `--glass-a` 0.3→0.6 (light) / 0.42→0.64 (dark);
+  `--glass-strong-a` 0.66→0.86 / 0.72→0.84. Frosted but text-legible (Apple
+  "Regular" material). Slightly darker light `--content`, brighter dark muted.
+- Search field: bumps to ~0.9 opacity on `:focus` so typed text is crisp.
+
+**Branding pass (iOS-26 Liquid Glass + Apple Maps):**
+- Wordmark refined: `🐭 RATMAP` + accent-yellow `.NYC`, rounded-full capsule.
+- Top-right controls grouped into ONE segmented glass capsule (About · theme ·
+  Filters) — the iOS-26 "floating grouped controls" pattern. ThemeToggle +
+  FilterPanel got optional className/triggerClassName props to render as bare
+  segments. Filters dropdown still anchors below.
+- Search field: Apple-Maps magnifying-glass icon, rounded-full, focus ring.
+
+**Verified:** typecheck ✓, 111 tests ✓, lint ✓; UX + toggle regressions PASS;
+dark popup + focused search legible; brand bar Apple-grade light + dark + mobile
+(`scripts/brand-*.png`, `contrast-*.png`); 0 console errors.
+
+---
+
+## 2026-06-16 — Mobbin-matched Apple-Maps card refinement (Claude Opus 4.8)
+
+**Goal:** With Mobbin authenticated (paid), compare the place card against real
+Apple Maps reference frames and refine to match.
+
+Mobbin Apple Maps refs showed the canonical pattern: a row of EQUAL-WIDTH
+icon-over-label buttons (one filled primary + tinted secondaries) and a stat strip
+bracketed by hairlines — not a capsule + circular icons. Applied:
+- Action row → 3-up grid: **Report** (filled accent) / **Maps** / **Share**
+  (tinted), icon-over-label, equal width.
+- Added a bracketed **REPORTS NEARBY · MOST RECENT** stat strip (Apple's metadata
+  row), moving the count out of the subtitle. Subtitle is now a clean category line.
+- Kept the `.glass-card` Liquid Glass material, circular close, mobile grabber.
+
+**Verified:** typecheck ✓, 111 tests ✓ (stat-row assertion updated), lint ✓; UX
+regressions PASS; matches Apple Maps in light + dark (`scripts/card-*.png`); 0 errors.
+
+---
+
+## 2026-06-16 — Apple-Maps Liquid Glass place-card pixel pass (Claude Opus 4.8)
+
+**Goal:** Refine the location side sheet to an iOS-26 Liquid-Glass, Apple-Maps
+place card (desktop focus). NOTE: first attempt — Mobbin search was paywalled, so
+this was grounded in Apple's published Liquid Glass guidance.
+
+- New `.glass-card` material (globals.css): deep Regular glass — blur(36) +
+  saturate(200%), bright specular rim, top bloom, layered float shadow; refraction
+  override for Chromium; @supports fallback. Concentric 28px container radius.
+- `AddressDetail` rebuilt as the place card: SF-like bold title (font-sans,
+  tracking-tight) + "borough · N reports nearby" subtitle; circular glass close;
+  **capsule primary "Report a rat"** + circular glass **Open-in-Maps** and
+  **Share** (Web Share API + clipboard fallback w/ copied check); "Recent activity
+  · latest <date>" section; mobile grabber + bottom-sheet, desktop floating card.
+
+**Verified:** typecheck ✓, 111 tests ✓, lint ✓. Playwright: card looks Apple-grade
+in light + dark + mobile (`scripts/card-*.png`); UX regressions PASS; 0 console errors.
+
+---
+
 ## 2026-06-16 — Address formatting, search hardening, 311 fix, Apple-Maps side sheet (Claude Opus 4.8)
 
 **Address formatting:** GeoSearch returns ALL-CAPS, ordinal-less names. New

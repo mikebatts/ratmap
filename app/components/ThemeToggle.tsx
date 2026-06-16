@@ -6,7 +6,7 @@ import { useTheme } from "./ThemeProvider";
  * Glass sun/moon toggle. Flips between light and dark; the icon reflects the
  * theme you'll switch TO, which is the conventional, least-surprising affordance.
  */
-export default function ThemeToggle() {
+export default function ThemeToggle({ className }: { className?: string }) {
   const { resolved, toggle } = useTheme();
   const next = resolved === "dark" ? "light" : "dark";
 
@@ -16,7 +16,10 @@ export default function ThemeToggle() {
       onClick={toggle}
       aria-label={`Switch to ${next} mode`}
       title={`Switch to ${next} mode`}
-      className="glass glass-interactive group flex h-11 w-11 items-center justify-center rounded-2xl text-content"
+      className={
+        className ??
+        "glass glass-interactive group flex h-11 w-11 items-center justify-center rounded-2xl text-content"
+      }
     >
       <span className="relative block h-[18px] w-[18px]">
         {/* Sun — shown in dark mode (click to go light). Hidden by default. */}

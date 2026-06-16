@@ -56,6 +56,16 @@ export default function Home() {
     setFlyTarget({ lng: match.longitude, lat: match.latitude, nonce: Date.now() });
   }
 
+  // Split the wordmark so the TLD (".nyc") can carry the accent color.
+  const dot = SITE_WORDMARK.indexOf(".");
+  const brandName = dot > 0 ? SITE_WORDMARK.slice(0, dot) : SITE_WORDMARK;
+  const brandTld = dot > 0 ? SITE_WORDMARK.slice(dot) : "";
+
+  // Shared segment style for the grouped control capsule (iOS-26 floating
+  // controls): bare pills inside one glass track.
+  const seg =
+    "flex h-9 items-center rounded-full text-sm font-medium text-content transition-colors hover:bg-content/10 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent";
+
   return (
     <main className="relative h-[100dvh] w-full overflow-hidden">
       <Map
@@ -73,29 +83,40 @@ export default function Home() {
               on sm+ it dissolves (contents) so it's brand · search · tools. */}
           <div className="flex items-start justify-between gap-2 sm:contents">
             {/* Brand */}
-            <div className="glass animate-rise-in flex shrink-0 items-baseline gap-2 self-start rounded-2xl px-3.5 py-2.5 sm:order-1">
-              <span className="font-display text-lg font-bold tracking-tight text-content">
-                <span aria-hidden="true">🐭</span>{" "}
-                <span className="text-content">{SITE_WORDMARK}</span>
+            <div className="glass animate-rise-in flex shrink-0 items-center gap-2.5 self-start rounded-full py-2 pl-3.5 pr-4 sm:order-1">
+              <span className="text-xl leading-none" aria-hidden="true">
+                🐭
               </span>
-              <span className="hidden text-xs font-medium text-content-muted sm:inline">
-                {total !== null && total > 0
-                  ? `${total.toLocaleString()} reports`
-                  : "NYC's rat map"}
+              <span className="flex items-baseline gap-2">
+                <span className="font-display text-[17px] font-bold tracking-tight text-content">
+                  {brandName}
+                  <span className="text-accent">{brandTld}</span>
+                </span>
+                <span className="hidden text-xs font-medium text-content-muted sm:inline">
+                  {total !== null && total > 0
+                    ? `${total.toLocaleString()} reports`
+                    : "NYC's rat map"}
+                </span>
               </span>
             </div>
 
-            {/* Tools — one cohesive cluster, consistent 44px controls */}
-            <div className="animate-rise-in flex shrink-0 items-start gap-2 self-start sm:order-3">
+            {/* Tools — one grouped glass capsule (iOS-26 floating controls) */}
+            <div className="glass animate-rise-in flex shrink-0 items-center gap-1 self-start rounded-full p-1 sm:order-3">
               <button
                 type="button"
                 onClick={() => setAboutOpen(true)}
-                className="glass glass-interactive flex h-11 items-center rounded-2xl px-4 text-sm font-medium text-content"
+                className={`${seg} px-3.5`}
               >
                 About
               </button>
-              <ThemeToggle />
-              <FilterPanel value={filters} onChange={setFilters} />
+              <ThemeToggle
+                className={`group ${seg} w-9 justify-center text-content`}
+              />
+              <FilterPanel
+                value={filters}
+                onChange={setFilters}
+                triggerClassName={`${seg} gap-1.5 px-3.5 font-semibold`}
+              />
             </div>
           </div>
 

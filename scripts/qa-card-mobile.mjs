@@ -1,0 +1,12 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: "dark", isMobile: true });
+const p = await ctx.newPage();
+await p.goto("http://localhost:3000/", { waitUntil: "networkidle", timeout: 30000 });
+await p.waitForTimeout(3500);
+const s = p.getByPlaceholder(/Search an address/i);
+await s.click(); await s.fill("350 5th ave"); await p.waitForTimeout(1300);
+await p.locator("ul[role=listbox] li button").first().click();
+await p.waitForTimeout(3500);
+await p.screenshot({ path: "scripts/card-mobile.png" });
+await b.close();

@@ -11,10 +11,10 @@
   --bg: 250 247 240; /* warm cream */
   --glass: 255 255 255; /* glass material base */
   --glass-edge: 255 255 255; /* specular highlight */
-  --glass-a: 0.3; /* glass tint opacity — kept low so the map refracts through */
-  --glass-strong-a: 0.66; /* content panels: more opaque for text legibility */
-  --content: 26 26 26; /* ink */
-  --content-muted: 90 92 100;
+  --glass-a: 0.6; /* glass tint opacity — frosted but legible (Apple "Regular") */
+  --glass-strong-a: 0.86; /* content panels: more opaque for text legibility */
+  --content: 22 22 24; /* ink */
+  --content-muted: 78 80 88;
   --border: 0 0 0; /* used at low alpha for hairlines */
   --border-alpha: 0.1;
   --accent: 245 197 24; /* hotdog yellow */
@@ -26,12 +26,12 @@
 
 .dark {
   --bg: 11 12 15; /* near-black NYC night */
-  --glass: 30 33 42; /* cool slate so the glass reads against the night map */
+  --glass: 34 37 46; /* cool slate so the glass reads against the night map */
   --glass-edge: 255 255 255;
-  --glass-a: 0.42;
-  --glass-strong-a: 0.72;
-  --content: 237 238 242;
-  --content-muted: 150 154 165;
+  --glass-a: 0.64;
+  --glass-strong-a: 0.84;
+  --content: 240 241 244;
+  --content-muted: 174 178 188;
   --border: 255 255 255;
   --border-alpha: 0.14;
   --accent: 245 197 24;
@@ -148,6 +148,34 @@ body {
       inset 0 -1px 1px 0 rgb(var(--glass-edge) / 0.16),
       0 18px 44px -14px rgb(0 0 0 / calc(var(--shadow-strength) + 0.08)),
       0 40px 80px -32px rgb(0 0 0 / var(--shadow-strength));
+  }
+
+  /* Apple-Maps "place card" material — the most refined Liquid Glass surface:
+     a deep Regular glass with a bright specular rim, a soft top bloom, and a
+     layered float shadow. Used by the location side sheet. */
+  .glass-card {
+    background-color: rgb(var(--glass) / var(--glass-strong-a));
+    background-image:
+      linear-gradient(
+        180deg,
+        rgb(var(--glass-edge) / 0.16) 0%,
+        rgb(var(--glass-edge) / 0) 18%
+      ),
+      radial-gradient(
+        130% 80% at 50% -12%,
+        rgb(var(--glass-edge) / 0.1) 0%,
+        rgb(var(--glass-edge) / 0) 55%
+      );
+    backdrop-filter: blur(36px) saturate(200%) brightness(1.05);
+    -webkit-backdrop-filter: blur(36px) saturate(200%) brightness(1.05);
+    border: 1px solid rgb(var(--border) / calc(var(--border-alpha) + 0.05));
+    box-shadow:
+      inset 0 1px 0.5px 0 rgb(var(--glass-edge) / 0.8),
+      inset 0 0 0 1px rgb(var(--glass-edge) / 0.05),
+      inset 0 -1px 1px 0 rgb(var(--glass-edge) / 0.18),
+      0 2px 6px -2px rgb(0 0 0 / 0.08),
+      0 24px 60px -18px rgb(0 0 0 / calc(var(--shadow-strength) + 0.1)),
+      0 56px 90px -44px rgb(0 0 0 / var(--shadow-strength));
   }
 
   /* Hairline divider that respects the theme. */
@@ -279,31 +307,39 @@ body {
 .glass-refract .glass-strong {
   backdrop-filter: blur(12px) saturate(185%) brightness(1.05) url(#liquid-glass);
 }
+.glass-refract .glass-card {
+  backdrop-filter: blur(16px) saturate(195%) brightness(1.05) url(#liquid-glass);
+}
 
 /* Graceful fallback where backdrop-filter is unsupported entirely. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass {
     background-color: rgb(var(--glass) / 0.92);
   }
-  .glass-strong {
+  .glass-strong,
+  .glass-card {
     background-color: rgb(var(--glass) / 0.96);
   }
 }
 
 /* ---------------------------------------------------------------------------
-   MapLibre popup — themed glass to match the overlay system.
+   MapLibre popup — themed glass to match the overlay system. The double-class
+   selector (`.maplibregl-popup .maplibregl-popup-content`) outranks MapLibre's
+   own `.maplibregl-popup-content { background:#fff }`, which would otherwise
+   leave the popup white in dark mode (light text → invisible).
 --------------------------------------------------------------------------- */
-.maplibregl-popup-content {
+.maplibregl-popup .maplibregl-popup-content {
   border-radius: 18px;
   padding: 0;
-  background-color: rgb(var(--glass) / 0.82);
+  /* near-opaque so report text always reads cleanly over a busy map */
+  background-color: rgb(var(--glass) / 0.95);
   background-image: linear-gradient(
     180deg,
-    rgb(var(--glass-edge) / 0.16) 0%,
+    rgb(var(--glass-edge) / 0.14) 0%,
     rgb(var(--glass-edge) / 0) 22%
   );
-  backdrop-filter: blur(24px) saturate(190%) brightness(1.05);
-  -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(1.05);
+  backdrop-filter: blur(24px) saturate(190%) brightness(1.04);
+  -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(1.04);
   border: 1px solid rgb(var(--border) / calc(var(--border-alpha) + 0.04));
   box-shadow:
     inset 0 1px 0.5px 0 rgb(var(--glass-edge) / 0.7),
@@ -313,8 +349,8 @@ body {
   font-family: var(--font-inter), system-ui, sans-serif;
 }
 
-.glass-refract .maplibregl-popup-content {
-  backdrop-filter: blur(10px) saturate(190%) brightness(1.06) url(#liquid-glass);
+.glass-refract .maplibregl-popup .maplibregl-popup-content {
+  backdrop-filter: blur(14px) saturate(190%) brightness(1.05) url(#liquid-glass);
 }
 
 /* Popup entrance — a gentle rise + fade so reports feel like they surface.
@@ -337,26 +373,26 @@ body {
 
 /* Themed popup tip (the little arrow). */
 .maplibregl-popup-anchor-top .maplibregl-popup-tip {
-  border-bottom-color: rgb(var(--glass) / 0.92);
+  border-bottom-color: rgb(var(--glass) / 0.95);
 }
 .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
-  border-top-color: rgb(var(--glass) / 0.92);
+  border-top-color: rgb(var(--glass) / 0.95);
 }
 .maplibregl-popup-anchor-left .maplibregl-popup-tip {
-  border-right-color: rgb(var(--glass) / 0.92);
+  border-right-color: rgb(var(--glass) / 0.95);
 }
 .maplibregl-popup-anchor-right .maplibregl-popup-tip {
-  border-left-color: rgb(var(--glass) / 0.92);
+  border-left-color: rgb(var(--glass) / 0.95);
 }
 
-.maplibregl-popup-close-button {
+.maplibregl-popup .maplibregl-popup-close-button {
   font-size: 18px;
   padding: 4px 10px;
   color: rgb(var(--content-muted));
   border-radius: 0 16px 0 12px;
 }
-.maplibregl-popup-close-button:hover {
-  background: rgb(var(--content) / 0.06);
+.maplibregl-popup .maplibregl-popup-close-button:hover {
+  background: rgb(var(--content) / 0.08);
   color: rgb(var(--content));
 }
 

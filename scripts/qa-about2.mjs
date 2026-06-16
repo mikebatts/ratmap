@@ -1,0 +1,13 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: "dark", deviceScaleFactor: 2 });
+const p = await ctx.newPage();
+await p.goto("http://localhost:3000/", { waitUntil: "networkidle", timeout: 30000 });
+await p.waitForTimeout(3000);
+await p.getByRole("button", { name: "About" }).click();
+await p.waitForTimeout(700);
+const txt = (await p.getByRole("dialog").innerText()).replace(/\s+/g," ").trim();
+const box = await p.getByRole("dialog").locator("> div").boundingBox().catch(()=>null);
+await p.screenshot({ path: "scripts/about2.png", clip: box ? {x:box.x-10,y:box.y-10,width:box.width+20,height:box.height+20} : undefined });
+console.log("about text:", txt);
+await b.close();

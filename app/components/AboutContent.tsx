@@ -14,25 +14,24 @@ export default function AboutContent() {
         <span aria-hidden="true">🐭</span> {SITE_WORDMARK}
       </h1>
 
-      <div className="mt-6 space-y-5 text-lg leading-relaxed text-content">
+      <div className="mt-6 text-lg leading-relaxed text-content">
         <p>
           A free, no-account, no-ads map of every publicly-reported rat
-          sighting, inspection, and 311 complaint in New York City. A love
-          letter to the city — by a New Yorker, for New Yorkers.
-        </p>
-        <p>
-          Built by{" "}
-          <a
-            href="https://x.com/mikebatts_"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-content underline decoration-accent decoration-2 underline-offset-2"
-          >
-            @mikebatts_
-          </a>{" "}
-          on X.
+          sighting, inspection, and 311 complaint in New York City.
         </p>
       </div>
+
+      <p className="mt-4 text-sm text-content-muted">
+        Made with <span aria-hidden="true">❤️</span> in NYC by{" "}
+        <a
+          href="https://x.com/mikebatts_"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-content underline decoration-accent decoration-2 underline-offset-2"
+        >
+          @mikebatts_
+        </a>
+      </p>
 
       <div className="mt-6 space-y-1.5 border-t border-hairline pt-5 text-sm text-content-muted">
         <p>
