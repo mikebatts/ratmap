@@ -4,6 +4,31 @@ Durable state log. Append an entry every iteration. Newest at top.
 
 ---
 
+## 2026-06-16 — Production hardening: alerting, health, error handling (Claude Opus 4.8)
+
+Live on ratmap.nyc (apex → www) serving 14k rows after Supabase env vars were set
+in Vercel. Added operational safety:
+
+- **Cron auth:** generated a `CRON_SECRET` (user added it to Vercel). Endpoint 401s
+  without it.
+- **Failure alerting:** new `lib/alert.ts` `notify()` posts to an optional
+  `ALERT_WEBHOOK_URL` (Slack/Discord) — the cron alerts on failure / missing service
+  key. New **`/api/health`** probe returns 200 ok / 503 degraded (stale = no ingest
+  in >36h, or DB down) for uptime monitors; reports total + per-source last-run age.
+- **Cron protections:** cold-start fallback capped to **3 months** (not 24) so a lost
+  watermark can't trigger a millions-of-rows pull / timeout / free-tier blowup;
+  **MAX_ROWS=20k** per source per run; alert on fatal error.
+- **User-friendly errors:** Map surfaces fetch failures via `onError`; page shows a
+  non-blocking glass toast "Couldn't load the latest reports" + **Retry** (re-runs the
+  viewport fetch via a retry nonce). Non-2xx responses now count as errors.
+- History intentionally kept at ~2.5 months (present/future-facing); no older backfill.
+
+**Verified:** typecheck ✓, 115 tests ✓ (added health-route + cron alert mocks), lint ✓;
+`/api/health` returns ok locally; error toast shows + clears on retry (Playwright).
+Pushed to **staging** first.
+
+---
+
 ## 2026-06-16 — Contrast/legibility sweep + branding pass (Claude Opus 4.8)
 
 **Dark popup bug:** clicking a dot in dark mode showed a WHITE popup with near-

@@ -49,6 +49,10 @@ interface MapProps {
   flyTarget: FlyTarget | null;
   onReady?: (map: maplibregl.Map) => void;
   onLoadingChange?: (loading: boolean) => void;
+  /** Fires true when a viewport fetch fails, false when one succeeds. */
+  onError?: (hasError: boolean) => void;
+  /** Bumping this re-runs the current viewport fetch (used by a Retry button). */
+  retryNonce?: number;
 }
 
 /**
@@ -241,6 +245,8 @@ export default function Map({
   flyTarget,
   onReady,
   onLoadingChange,
+  onError,
+  retryNonce,
 }: MapProps) {
   const { resolved } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -274,17 +280,27 @@ export default function Map({
     onLoadingChange?.(true);
     try {
       const res = await fetch(`/api/observations?${params.toString()}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const geojson = await res.json();
       // Drop stale responses (a newer fetch already fired).
       if (seq !== fetchSeq.current) return;
       const liveSrc = map.getSource(SOURCE_ID) as GeoJSONSource | undefined;
       liveSrc?.setData(geojson);
+      onError?.(false);
     } catch {
-      // Defensive: leave the existing data in place on error.
+      // Leave existing data in place and surface a (dismissable) error so the
+      // user knows the map may be out of date — rather than silently failing.
+      if (seq === fetchSeq.current) onError?.(true);
     } finally {
       if (seq === fetchSeq.current) onLoadingChange?.(false);
     }
   }
+
+  // Re-run the current fetch when the retry token changes (Retry button).
+  useEffect(() => {
+    if (retryNonce) refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [retryNonce]);
 
   // Initialize the map once.
   useEffect(() => {

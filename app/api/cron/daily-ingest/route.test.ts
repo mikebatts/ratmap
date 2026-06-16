@@ -14,6 +14,7 @@ vi.mock("@/lib/ingest", () => ({
 vi.mock("@/lib/supabase", () => ({
   getServiceClient: () => getServiceClient(),
 }));
+vi.mock("@/lib/alert", () => ({ notify: vi.fn() }));
 
 import { GET } from "./route";
 

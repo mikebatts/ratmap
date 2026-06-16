@@ -28,6 +28,8 @@ export default function Home() {
   const [flyTarget, setFlyTarget] = useState<FlyTarget | null>(null);
   const [selected, setSelected] = useState<AddressMatch | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [dataError, setDataError] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   const [filters, setFilters] = useState<FilterState>({
     range: "1y",
@@ -73,6 +75,8 @@ export default function Home() {
         flyTarget={flyTarget}
         onReady={setMap}
         onLoadingChange={setLoading}
+        onError={setDataError}
+        retryNonce={retryNonce}
       />
 
       {/* Top bar: brand (left) · search (center) · control cluster (right).
@@ -130,10 +134,33 @@ export default function Home() {
       <MapControls map={map} />
 
       {/* Loading pill */}
-      {loading && (
+      {loading && !dataError && (
         <div className="glass animate-pop-in absolute left-1/2 top-20 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium text-content">
           <span className="inline-block h-1.5 w-1.5 animate-pulse-soft rounded-full bg-accent" />
           Loading observations…
+        </div>
+      )}
+
+      {/* Data error toast — non-blocking, dismissable, with a retry */}
+      {dataError && (
+        <div
+          role="status"
+          className="glass animate-pop-in absolute left-1/2 top-20 z-10 flex -translate-x-1/2 items-center gap-3 rounded-full py-1.5 pl-4 pr-1.5 text-xs font-medium text-content"
+        >
+          <span className="flex items-center gap-2">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#E03131]" />
+            Couldn&apos;t load the latest reports.
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setDataError(false);
+              setRetryNonce((n) => n + 1);
+            }}
+            className="rounded-full bg-content/10 px-3 py-1 font-semibold text-content transition-colors hover:bg-content/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            Retry
+          </button>
         </div>
       )}
 
